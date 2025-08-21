@@ -1,0 +1,36 @@
+# Mini-Redis Core Service - Optimized for Performance with Bun Runtime
+FROM oven/bun:1
+
+# Set working directory
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup --gid 1001 miniredis && \
+  adduser --system --uid 1001 --gid 1001 miniredis
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies using Bun
+# Bun handles both package.json and package-lock.json automatically
+RUN bun install --production && \
+  bun pm cache rm
+
+# Copy source code
+COPY . .
+
+# Change ownership to non-root user
+RUN chown -R miniredis:miniredis /app
+
+# Switch to non-root user
+USER miniredis
+
+# Expose Redis port
+EXPOSE 6380
+
+# Health check using RESP protocol with Bun
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD bun healthcheck.js
+
+# Start the core service with Bun
+CMD ["bun", "index.js"]
