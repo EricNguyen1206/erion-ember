@@ -1,19 +1,16 @@
 {
-  "name": "semantic-cache-benchmark",
+  "name": "@erion/benchmark",
   "version": "1.0.0",
-  "description": "Benchmark suite for LLM Semantic Cache",
-  "main": "src/index.js",
+  "description": "K6 Load Testing Suite",
   "scripts": {
-    "test": "node --test tests/**/*.test.js",
-    "benchmark": "node src/runner.js",
-    "benchmark:ollama": "USE_OLLAMA=true node src/runner.js",
-    "benchmark:mock": "USE_MOCK=true node src/runner.js"
-  },
-  "dependencies": {
-    "axios": "^1.6.0"
+    "smoke": "k6 run k6/smoke-test.js",
+    "load": "k6 run k6/load-test.js",
+    "stress": "k6 run k6/stress-test.js",
+    "soak": "k6 run k6/soak-test.js",
+    "generate-data": "node scripts/generate-workload.js"
   },
   "devDependencies": {},
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }
