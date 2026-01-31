@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  semantic-cache:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CACHE_DIM=1536
+      - CACHE_MAX_ELEMENTS=100000
+      - CACHE_THRESHOLD=0.85
+    command: npm test
+    
+  semantic-cache-dev:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: /bin/sh -c "npm install && npm run dev"
+    stdin_open: true
+    tty: true

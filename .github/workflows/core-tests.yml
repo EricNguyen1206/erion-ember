@@ -1,0 +1,40 @@
+name: Core Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'core/**'
+  pull_request:
+    paths:
+      - 'core/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+    
+    - name: Install dependencies
+      working-directory: ./core
+      run: bun install
+    
+    - name: Run tests
+      working-directory: ./core
+      run: |
+        if [ -d "tests" ] && [ "$(ls -A tests 2>/dev/null)" ]; then
+          bun test
+        else
+          echo "No unit tests found, skipping..."
+        fi
+    
+    - name: Build Docker image
+      working-directory: ./core
+      run: docker build -t erion-core-test .

@@ -1,0 +1,16 @@
+{
+  "name": "@erion/benchmark",
+  "version": "1.0.0",
+  "description": "K6 Load Testing Suite",
+  "scripts": {
+    "smoke": "k6 run k6/smoke-test.js",
+    "load": "k6 run k6/load-test.js",
+    "stress": "k6 run k6/stress-test.js",
+    "soak": "k6 run k6/soak-test.js",
+    "generate-data": "node scripts/generate-workload.js"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

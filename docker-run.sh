@@ -50,6 +50,20 @@ check_docker() {
     fi
 }
 
+# Function to detect platform and show warnings if needed
+check_platform() {
+    local arch=$(uname -m)
+    if [[ "$arch" == "arm64" ]]; then
+        print_warning "⚠️  ARM64 (Apple Silicon) detected"
+        print_status "📋 Platform compatibility:"
+        print_status "  ✅ mini-redis-core: Native ARM64 support"
+        print_status "  ✅ redisinsight: Native ARM64 support"
+        print_status "  ⚡ memtier-benchmark: Uses x86_64 emulation (may be slower)"
+        print_status "  ✅ redis-cli: Native ARM64 support"
+        echo ""
+    fi
+}
+
 # Function to build all images
 build() {
     print_header "Building Mini-Redis Microservices"
@@ -160,32 +174,101 @@ remove-insight() {
 # Function to run benchmark tests
 benchmark() {
     print_header "Running Basic Benchmark Tests"
+
+    # Check if core service is running
+    if ! docker compose ps mini-redis-core | grep -q "Up"; then
+        print_error "Mini-Redis core service is not running!"
+        print_status "Start the core service first: ./docker-run.sh start"
+        exit 1
+    fi
+
+    # Show platform warning for ARM64
+    local arch=$(uname -m)
+    if [[ "$arch" == "arm64" ]]; then
+        print_warning "⚡ Running memtier-benchmark with x86_64 emulation on ARM64"
+        print_status "Performance may be slower than native execution"
+        echo ""
+    fi
+
     print_status "Running basic performance tests..."
-    docker compose --profile benchmark up --remove-orphans mini-redis-benchmark
+    docker compose --profile benchmark up --remove-orphans memtier-benchmark
     print_success "Basic benchmark completed!"
 }
 
 # Function to run stress tests
 stress() {
     print_header "Running Stress Tests"
+
+    # Check if core service is running
+    if ! docker compose ps mini-redis-core | grep -q "Up"; then
+        print_error "Mini-Redis core service is not running!"
+        print_status "Start the core service first: ./docker-run.sh start"
+        exit 1
+    fi
+
+    # Show platform warning for ARM64
+    local arch=$(uname -m)
+    if [[ "$arch" == "arm64" ]]; then
+        print_warning "⚡ Running memtier-benchmark with x86_64 emulation on ARM64"
+        print_status "Performance may be slower than native execution"
+        echo ""
+    fi
+
     print_status "Running high-load stress tests..."
-    docker compose --profile stress up --remove-orphans mini-redis-benchmark-stress
+    docker compose --profile stress up --remove-orphans memtier-benchmark-stress
     print_success "Stress tests completed!"
 }
 
-# Function to run pub/sub tests
-pubsub() {
-    print_header "Running Pub/Sub Tests"
-    print_status "Running pub/sub performance tests..."
-    docker compose --profile pubsub up --remove-orphans mini-redis-benchmark-pubsub
-    print_success "Pub/Sub tests completed!"
+# Function to run pipeline tests
+pipeline() {
+    print_header "Running Pipeline Tests"
+
+    # Check if core service is running
+    if ! docker compose ps mini-redis-core | grep -q "Up"; then
+        print_error "Mini-Redis core service is not running!"
+        print_status "Start the core service first: ./docker-run.sh start"
+        exit 1
+    fi
+
+    # Show platform warning for ARM64
+    local arch=$(uname -m)
+    if [[ "$arch" == "arm64" ]]; then
+        print_warning "⚡ Running memtier-benchmark with x86_64 emulation on ARM64"
+        print_status "Performance may be slower than native execution"
+        echo ""
+    fi
+
+    print_status "Running pipeline performance tests..."
+    docker compose --profile pipeline up --remove-orphans memtier-benchmark-pipeline
+    print_success "Pipeline tests completed!"
 }
 
 # Function to run all benchmark tests
 benchmark-all() {
     print_header "Running All Benchmark Tests"
+
+    # Check if core service is running
+    if ! docker compose ps mini-redis-core | grep -q "Up"; then
+        print_error "Mini-Redis core service is not running!"
+        print_status "Start the core service first: ./docker-run.sh start"
+        exit 1
+    fi
+
+    # Show platform warning for ARM64
+    local arch=$(uname -m)
+    if [[ "$arch" == "arm64" ]]; then
+        print_warning "⚡ Running memtier-benchmark with x86_64 emulation on ARM64"
+        print_status "Performance may be slower than native execution"
+        echo ""
+    fi
+
     print_status "Running comprehensive benchmark suite..."
-    docker compose --profile benchmark-all up --remove-orphans mini-redis-benchmark-all
+    print_status "1. Basic benchmark..."
+    docker compose --profile benchmark up --remove-orphans memtier-benchmark
+    print_status "2. Stress test..."
+    docker compose --profile stress up --remove-orphans memtier-benchmark-stress
+    print_status "3. Pipeline test..."
+    docker compose --profile pipeline up --remove-orphans memtier-benchmark-pipeline
     print_success "All benchmarks completed!"
 }
 
@@ -273,7 +356,7 @@ show_help() {
     echo "📊 Benchmark Commands:"
     echo "  benchmark          Run basic performance tests"
     echo "  stress             Run high-load stress tests"
-    echo "  pubsub             Run pub/sub performance tests"
+    echo "  pipeline           Run pipeline performance tests"
     echo "  benchmark-all      Run all benchmark scenarios"
     echo ""
     echo "🔧 Utility Commands:"
@@ -307,11 +390,17 @@ show_help() {
     echo "  • Core service runs independently - no dependencies"
     echo "  • Insight service is plug-and-play - add/remove anytime"
     echo "  • Connect with any Redis client: redis-cli -p 6380"
+    echo ""
+    echo "🏗️  Platform Compatibility:"
+    echo "  • ARM64 (Apple Silicon): Native support for core, insight, and CLI"
+    echo "  • ARM64 (Apple Silicon): Benchmark tools use x86_64 emulation"
+    echo "  • x86_64 (Intel/AMD): Native support for all services"
 }
 
 # Main script logic
 main() {
     check_docker
+    check_platform
 
     case "${1:-help}" in
         build)
@@ -337,8 +426,8 @@ main() {
         stress)
             stress
             ;;
-        pubsub)
-            pubsub
+        pipeline)
+            pipeline
             ;;
         benchmark-all)
             benchmark-all
