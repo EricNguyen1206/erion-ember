@@ -1,0 +1,19 @@
+{
+  "name": "semantic-cache-benchmark",
+  "version": "1.0.0",
+  "description": "Benchmark suite for LLM Semantic Cache",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "benchmark": "node src/runner.js",
+    "benchmark:ollama": "USE_OLLAMA=true node src/runner.js",
+    "benchmark:mock": "USE_MOCK=true node src/runner.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
