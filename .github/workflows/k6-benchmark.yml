@@ -1,0 +1,73 @@
+name: K6 Benchmark
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type to run'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - load
+          - stress
+          - soak
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup K6
+      uses: grafana/setup-k6-action@v1
+      with:
+        version: latest
+    
+    - name: Start services
+      run: |
+        docker compose up -d core redis
+        echo "Waiting for services to be ready..."
+        sleep 15
+    
+    - name: Verify services are running
+      run: |
+        curl -f http://localhost:3000/health || exit 1
+        docker compose ps
+    
+    - name: Run smoke test
+      run: |
+        k6 run \
+          --out json=benchmark/results/smoke-test.json \
+          --env CORE_URL=http://localhost:3000 \
+          benchmark/k6/smoke-test.js
+    
+    - name: Upload results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: k6-results-${{ github.sha }}
+        path: benchmark/results/*.json
+        retention-days: 30
+    
+    - name: Generate benchmark summary
+      if: always()
+      run: |
+        if [ -f benchmark/results/smoke-test.json ]; then
+          echo "✅ Benchmark completed successfully"
+          echo "Results:"
+          cat benchmark/results/smoke-test.json | head -100
+        else
+          echo "❌ Benchmark results not found"
+        fi
+    
+    - name: Cleanup
+      if: always()
+      run: docker compose down
