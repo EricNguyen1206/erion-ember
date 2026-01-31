@@ -1,24 +1,133 @@
-# Mini-Redis Microservices
+# Erion Ember - LLM Semantic Cache with K6 Benchmarking
+version: '3.8'
+
 services:
   # ============================================================================
-  # CORE SERVICE - Fully Standalone Redis-Compatible Server
+  # CORE SERVICES (Always run)
   # ============================================================================
-  # This service runs independently and provides complete Redis functionality.
-  # No dependencies on other services. Can be used as a drop-in Redis replacement.
+  
+  redis:
+    image: redis:7-alpine
+    container_name: erion-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - erion-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
+  core:
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    container_name: erion-core
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - PORT=3000
+      - OLLAMA_URL=http://host.docker.internal:11434
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - erion-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # BENCHMARK SERVICES (Only with --profile benchmark)
+  # ============================================================================
+  
+  k6:
+    image: grafana/k6:latest
+    container_name: erion-k6
+    profiles:
+      - benchmark
+    environment:
+      - K6_OUT=json=/results/k6-results.json
+      - CORE_URL=http://core:3000
+    volumes:
+      - ./benchmark/k6:/k6
+      - ./benchmark/results:/results
+    depends_on:
+      - core
+    networks:
+      - erion-network
+    command: run /k6/smoke-test.js
+
+  # ============================================================================
+  # MONITORING SERVICES (Optional with --profile monitoring)
+  # ============================================================================
+  
+  influxdb:
+    image: influxdb:2.7
+    container_name: erion-influxdb
+    profiles:
+      - monitoring
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin123
+      - INFLUXDB_HTTP_AUTH_ENABLED=false
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    ports:
+      - "8086:8086"
+    networks:
+      - erion-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: erion-grafana
+    profiles:
+      - monitoring
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./benchmark/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./benchmark/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - influxdb
+    networks:
+      - erion-network
+
+  # ============================================================================
+  # LEGACY MINI-REDIS SERVICES (Kept for compatibility)
+  # ============================================================================
+  
   mini-redis-core:
     build:
       context: ./services/mini-redis-core
       dockerfile: Dockerfile
     container_name: mini-redis-core
     ports:
-      - "6380:6380"  # Redis protocol port - connect with any Redis client
+      - "6380:6380"
     environment:
       - NODE_ENV=production
       - REDIS_PORT=6380
     networks:
-      - mini-redis-network
+      - erion-network
     restart: unless-stopped
+    profiles:
+      - legacy
     healthcheck:
       test: ["CMD", "node", "-e", "const net = require('net'); const client = net.connect(6380, 'localhost', () => { client.write('PING\\n'); client.on('data', () => { client.end(); process.exit(0); }); }); client.on('error', () => process.exit(1));"]
       interval: 30s
@@ -26,114 +135,12 @@ services:
       retries: 3
       start_period: 10s
 
-  # ============================================================================
-  # OFFICIAL REDISINSIGHT SERVICE - Redis Labs Web Monitoring Tool
-  # ============================================================================
-  # Official Redis monitoring and management tool with web interface
-  # Provides comprehensive Redis database management and monitoring capabilities
-
-  redisinsight:
-    image: redislabs/redisinsight:latest
-    container_name: redisinsight
-    ports:
-      - "8080:5540"  # RedisInsight web interface port
-    volumes:
-      - redisinsight-data:/db
-    networks:
-      - mini-redis-network
-    restart: unless-stopped
-    profiles:
-      - insight  # Optional service - only starts when explicitly requested
-
-  # ============================================================================
-  # OFFICIAL MEMTIER BENCHMARK SERVICE - Redis Labs Benchmarking Tool
-  # ============================================================================
-  # Official Redis benchmarking tool for performance testing
-  # Provides comprehensive Redis performance testing capabilities
-
-  memtier-benchmark:
-    image: redislabs/memtier_benchmark:latest
-    container_name: memtier-benchmark
-    networks:
-      - mini-redis-network
-    profiles:
-      - benchmark
-    command: [
-      "--server=mini-redis-core",
-      "--port=6380",
-      "--protocol=redis",
-      "--clients=10",
-      "--threads=2",
-      "--requests=1000",
-      "--data-size=32",
-      "--key-pattern=R:R",
-      "--ratio=1:1",
-      "--print-percentiles=50,90,95,99"
-    ]
-
-  # Stress test variant with higher load
-  memtier-benchmark-stress:
-    image: redislabs/memtier_benchmark:latest
-    container_name: memtier-benchmark-stress
-    networks:
-      - mini-redis-network
-    profiles:
-      - stress
-    command: [
-      "--server=mini-redis-core",
-      "--port=6380",
-      "--protocol=redis",
-      "--clients=50",
-      "--threads=4",
-      "--requests=10000",
-      "--data-size=1024",
-      "--key-pattern=R:R",
-      "--ratio=1:1",
-      "--print-percentiles=50,90,95,99,99.9"
-    ]
-
-  # Pipeline test variant
-  memtier-benchmark-pipeline:
-    image: redislabs/memtier_benchmark:latest
-    container_name: memtier-benchmark-pipeline
-    networks:
-      - mini-redis-network
-    profiles:
-      - pipeline
-    command: [
-      "--server=mini-redis-core",
-      "--port=6380",
-      "--protocol=redis",
-      "--clients=20",
-      "--threads=2",
-      "--requests=5000",
-      "--data-size=64",
-      "--pipeline=10",
-      "--key-pattern=R:R",
-      "--ratio=1:1",
-      "--print-percentiles=50,90,95,99"
-    ]
-
-  # Redis CLI for manual testing
-  redis-cli:
-    image: redis:7-alpine
-    container_name: redis-cli-client
-    depends_on:
-      - mini-redis-core
-    networks:
-      - mini-redis-network
-    profiles:
-      - cli
-    stdin_open: true
-    tty: true
-    command: redis-cli -h mini-redis-core -p 6380
-
 networks:
-  mini-redis-network:
+  erion-network:
     driver: bridge
 
 volumes:
-  mini-redis-data:
+  redis_data:
     driver: local
-  redisinsight-data:
+  influxdb_data:
     driver: local
