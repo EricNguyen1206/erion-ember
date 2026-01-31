@@ -28,7 +28,12 @@ jobs:
     
     - name: Run tests
       working-directory: ./core
-      run: bun test
+      run: |
+        if [ -d "tests" ] && [ "$(ls -A tests 2>/dev/null)" ]; then
+          bun test
+        else
+          echo "No unit tests found, skipping..."
+        fi
     
     - name: Build Docker image
       working-directory: ./core

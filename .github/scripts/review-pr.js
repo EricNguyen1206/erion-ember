@@ -157,36 +157,59 @@ async function callAIAPIWithRetry(messages, retryCount = 0) {
 }
 
 async function callAIAPI(messages) {
-  if (!AI_API_KEY) {
-    throw new Error('AI_API_KEY environment variable is not set');
+  const url = new URL(AI_API_URL);
+  
+  // Detect API type based on URL path
+  const isOllamaNative = url.pathname.includes('/api/chat') || url.pathname.includes('/api/generate');
+  const isOpenAICompatible = url.pathname.includes('/v1/chat/completions');
+  
+  console.error(`[DEBUG] Using AI Provider: ${url.hostname}`);
+  console.error(`[DEBUG] Using model: ${AI_MODEL}`);
+  console.error(`[DEBUG] API Type: ${isOllamaNative ? 'Ollama Native' : 'OpenAI-compatible'}`);
+
+  let requestBody;
+  
+  if (isOllamaNative) {
+    // Ollama Native API format (/api/chat)
+    requestBody = JSON.stringify({
+      model: AI_MODEL,
+      messages: messages,
+      stream: false,
+    });
+  } else {
+    // OpenAI-compatible format (including Ollama's /v1/chat/completions)
+    requestBody = JSON.stringify({
+      model: AI_MODEL,
+      messages: messages,
+      stream: false,
+    });
   }
 
-  const requestBody = JSON.stringify({
-    model: AI_MODEL,
-    messages: messages,
-    stream: false,
-  });
-
-  console.error(`[DEBUG] Using AI Provider: ${new URL(AI_API_URL).hostname}`);
-  console.error(`[DEBUG] Using model: ${AI_MODEL}`);
-
   return new Promise((resolve, reject) => {
-    const url = new URL(AI_API_URL);
+    const headers = {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(requestBody),
+    };
+
+    // Add Authorization header if API key is provided
+    // Ollama native API typically doesn't require auth, but cloud versions might
+    if (AI_API_KEY) {
+      headers['Authorization'] = `Bearer ${AI_API_KEY}`;
+    }
 
     const options = {
       hostname: url.hostname,
-      port: url.port || 443,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
       path: url.pathname,
       method: 'POST',
       timeout: 120000,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AI_API_KEY}`,
-        'Content-Length': Buffer.byteLength(requestBody),
-      },
+      headers: headers,
     };
 
-    const req = https.request(options, (res) => {
+    // Use http or https based on protocol
+    const protocol = url.protocol === 'https:' ? https : require('http');
+
+    const req = protocol.request(options, (res) => {
       let data = '';
 
       res.on('data', (chunk) => {
@@ -201,14 +224,21 @@ async function callAIAPI(messages) {
 
         try {
           const parsed = JSON.parse(data);
+          
           // Handle OpenAI-compatible response format
           if (parsed.choices && parsed.choices[0]?.message?.content) {
             resolve(parsed.choices[0].message.content);
           }
-          // Handle Ollama-style response format
+          // Handle Ollama native response format (/api/chat)
           else if (parsed.message && parsed.message.content) {
             resolve(parsed.message.content);
-          } else if (parsed.error) {
+          }
+          // Handle Ollama native response format (/api/generate)
+          else if (parsed.response) {
+            resolve(parsed.response);
+          }
+          // Handle error responses
+          else if (parsed.error) {
             reject(new Error(`AI API error: ${parsed.error.message || parsed.error}`));
           } else {
             reject(new Error(`Unexpected response format: ${data.substring(0, 200)}`));
@@ -345,7 +375,7 @@ async function createPRReview(comments, summary) {
   const requestBody = JSON.stringify({
     commit_id: commitId,
     body: summary,
-    event: comments.length > 0 ? 'COMMENT' : 'APPROVE',
+    event: 'COMMENT',  // GitHub Actions cannot approve PRs, always use COMMENT
     comments: comments,
   });
 
