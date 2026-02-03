@@ -24,6 +24,11 @@
   "devDependencies": {
     "bun-types": "latest"
   },
+  "trustedDependencies": [
+    "lz4",
+    "hnswlib-node",
+    "xxhash-addon"
+  ],
   "engines": {
     "node": ">=20.0.0"
   }
