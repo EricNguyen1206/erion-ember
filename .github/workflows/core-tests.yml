@@ -4,10 +4,14 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'core/**'
+      - 'src/**'
+      - 'package.json'
+      - 'Dockerfile'
   pull_request:
     paths:
-      - 'core/**'
+      - 'src/**'
+      - 'package.json'
+      - 'Dockerfile'
 
 jobs:
   test:
@@ -23,11 +27,9 @@ jobs:
         bun-version: latest
     
     - name: Install dependencies
-      working-directory: ./core
       run: bun install
     
     - name: Run tests
-      working-directory: ./core
       run: |
         if [ -d "tests" ] && [ "$(ls -A tests 2>/dev/null)" ]; then
           bun test
@@ -36,5 +38,4 @@ jobs:
         fi
     
     - name: Build Docker image
-      working-directory: ./core
-      run: docker build -t erion-core-test .
+      run: docker build -t erion-ember-test .
