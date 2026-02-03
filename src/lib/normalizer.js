@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 /**
  * Prompt Normalizer - Normalizes text for deduplication
@@ -40,4 +40,4 @@ class Normalizer {
   }
 }
 
-module.exports = Normalizer;
+export default Normalizer;

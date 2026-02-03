@@ -1,4 +1,4 @@
-const HNSWIndex = require('../src/lib/hnsw-index');
+import HNSWIndex from '../src/lib/hnsw-index.js';
 
 describe('HNSWIndex', () => {
   let index;

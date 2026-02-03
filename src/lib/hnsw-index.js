@@ -1,4 +1,4 @@
-const hnswlib = require('hnswlib-node');
+import hnswlib from 'hnswlib-node';
 
 /**
  * HNSW Index Wrapper - C++ vector search with Node.js bindings
@@ -101,4 +101,4 @@ class HNSWIndex {
   }
 }
 
-module.exports = HNSWIndex;
+export default HNSWIndex;

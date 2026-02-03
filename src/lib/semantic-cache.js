@@ -1,8 +1,9 @@
-const HNSWIndex = require('./hnsw-index');
-const Quantizer = require('./quantizer');
-const Compressor = require('./compressor');
-const Normalizer = require('./normalizer');
-const MetadataStore = require('./metadata-store');
+import { promises as fs } from 'fs';
+import HNSWIndex from './hnsw-index.js';
+import Quantizer from './quantizer.js';
+import Compressor from './compressor.js';
+import Normalizer from './normalizer.js';
+import MetadataStore from './metadata-store.js';
 
 /**
  * Semantic Cache - High-performance cache for LLM queries with vector search
@@ -26,8 +27,20 @@ class SemanticCache {
     this._statistics = {
       hits: 0,
       misses: 0,
-      totalQueries: 0
+      totalQueries: 0,
+      savedTokens: 0,
+      savedUsd: 0
     };
+  }
+
+  /**
+   * Track savings from a cache hit
+   * @param {number} tokens - Number of tokens saved
+   * @param {number} usd - USD amount saved
+   */
+  trackSavings(tokens, usd) {
+    this._statistics.savedTokens += tokens;
+    this._statistics.savedUsd += usd;
   }
 
   /**
@@ -174,7 +187,9 @@ class SemanticCache {
       cacheHits: this._statistics.hits,
       cacheMisses: this._statistics.misses,
       hitRate: hitRate.toFixed(4),
-      totalQueries: this._statistics.totalQueries
+      totalQueries: this._statistics.totalQueries,
+      savedTokens: this._statistics.savedTokens,
+      savedUsd: Number(this._statistics.savedUsd.toFixed(5))
     };
   }
 
@@ -184,7 +199,7 @@ class SemanticCache {
   clear() {
     this.metadataStore.clear();
     this.index = new HNSWIndex(this.dim, this.maxElements, 'cosine');
-    this._statistics = { hits: 0, misses: 0, totalQueries: 0 };
+    this._statistics = { hits: 0, misses: 0, totalQueries: 0, savedTokens: 0, savedUsd: 0 };
   }
 
   /**
@@ -196,9 +211,8 @@ class SemanticCache {
     this.index.save(`${path}/index.bin`);
     
     // Save metadata
-    const fs = require('fs').promises;
     const metadata = {
-      stats: this.stats,
+      stats: this._statistics,
       store: Array.from(this.metadataStore.metadata.entries()),
       config: {
         dim: this.dim,
@@ -218,7 +232,6 @@ class SemanticCache {
     this.index.load(`${path}/index.bin`);
     
     // Load metadata
-    const fs = require('fs').promises;
     const data = await fs.readFile(`${path}/metadata.json`, 'utf8');
     const metadata = JSON.parse(data);
     
@@ -268,4 +281,4 @@ class SemanticCache {
   }
 }
 
-module.exports = SemanticCache;
+export default SemanticCache;
