@@ -5,6 +5,9 @@ WORKDIR /app
 # Copy package files
 COPY package.json bun.lockb* ./
 
+# Install python3 and build tools for native modules (hnswlib-node)
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 RUN bun install
 
