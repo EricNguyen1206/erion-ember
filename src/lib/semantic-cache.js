@@ -26,8 +26,20 @@ class SemanticCache {
     this._statistics = {
       hits: 0,
       misses: 0,
-      totalQueries: 0
+      totalQueries: 0,
+      savedTokens: 0,
+      savedUsd: 0
     };
+  }
+
+  /**
+   * Track savings from a cache hit
+   * @param {number} tokens - Number of tokens saved
+   * @param {number} usd - USD amount saved
+   */
+  trackSavings(tokens, usd) {
+    this._statistics.savedTokens += tokens;
+    this._statistics.savedUsd += usd;
   }
 
   /**
@@ -174,7 +186,9 @@ class SemanticCache {
       cacheHits: this._statistics.hits,
       cacheMisses: this._statistics.misses,
       hitRate: hitRate.toFixed(4),
-      totalQueries: this._statistics.totalQueries
+      totalQueries: this._statistics.totalQueries,
+      savedTokens: this._statistics.savedTokens,
+      savedUsd: Number(this._statistics.savedUsd.toFixed(5))
     };
   }
 
@@ -184,7 +198,7 @@ class SemanticCache {
   clear() {
     this.metadataStore.clear();
     this.index = new HNSWIndex(this.dim, this.maxElements, 'cosine');
-    this._statistics = { hits: 0, misses: 0, totalQueries: 0 };
+    this._statistics = { hits: 0, misses: 0, totalQueries: 0, savedTokens: 0, savedUsd: 0 };
   }
 
   /**
