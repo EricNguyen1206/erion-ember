@@ -16,9 +16,10 @@ await fastify.register(rateLimit, {
 
 // Authentication Hook
 fastify.addHook('onRequest', async (request, reply) => {
-  // Use routeOptions.url (Fastify v4+) or fallback to routerPath (deprecated)
-  const routePath = request.routeOptions?.url || request.routerPath;
-  if (routePath === '/health' || request.url === '/health') {
+  // Use routeOptions.url (if matched) or raw URL (without query params)
+  const routePath = request.routeOptions?.url || request.url.split('?')[0];
+
+  if (routePath === '/health') {
     return;
   }
 
