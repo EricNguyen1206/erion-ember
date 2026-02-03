@@ -1,8 +1,9 @@
-const HNSWIndex = require('./hnsw-index');
-const Quantizer = require('./quantizer');
-const Compressor = require('./compressor');
-const Normalizer = require('./normalizer');
-const MetadataStore = require('./metadata-store');
+import { promises as fs } from 'fs';
+import HNSWIndex from './hnsw-index.js';
+import Quantizer from './quantizer.js';
+import Compressor from './compressor.js';
+import Normalizer from './normalizer.js';
+import MetadataStore from './metadata-store.js';
 
 /**
  * Semantic Cache - High-performance cache for LLM queries with vector search
@@ -210,7 +211,6 @@ class SemanticCache {
     this.index.save(`${path}/index.bin`);
     
     // Save metadata
-    const fs = require('fs').promises;
     const metadata = {
       stats: this._statistics,
       store: Array.from(this.metadataStore.metadata.entries()),
@@ -232,7 +232,6 @@ class SemanticCache {
     this.index.load(`${path}/index.bin`);
     
     // Load metadata
-    const fs = require('fs').promises;
     const data = await fs.readFile(`${path}/metadata.json`, 'utf8');
     const metadata = JSON.parse(data);
     
@@ -282,4 +281,4 @@ class SemanticCache {
   }
 }
 
-module.exports = SemanticCache;
+export default SemanticCache;

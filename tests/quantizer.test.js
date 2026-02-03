@@ -1,4 +1,4 @@
-const Quantizer = require('../src/lib/quantizer');
+import Quantizer from '../src/lib/quantizer.js';
 
 describe('Quantizer', () => {
   let quantizer;

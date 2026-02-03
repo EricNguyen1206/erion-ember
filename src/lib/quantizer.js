@@ -36,4 +36,4 @@ class Quantizer {
   }
 }
 
-module.exports = Quantizer;
+export default Quantizer;

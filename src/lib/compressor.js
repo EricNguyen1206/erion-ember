@@ -1,4 +1,4 @@
-const lz4js = require('lz4js');
+import lz4js from 'lz4js';
 
 /**
  * LZ4 Compressor - Fast compression for text data
@@ -53,4 +53,4 @@ class Compressor {
   }
 }
 
-module.exports = Compressor;
+export default Compressor;

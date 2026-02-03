@@ -1,4 +1,4 @@
-const MetadataStore = require('../src/lib/metadata-store');
+import MetadataStore from '../src/lib/metadata-store.js';
 
 describe('MetadataStore', () => {
   let store;

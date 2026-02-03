@@ -1,4 +1,4 @@
-const Normalizer = require('../src/lib/normalizer');
+import Normalizer from '../src/lib/normalizer.js';
 
 describe('Normalizer', () => {
   let normalizer;

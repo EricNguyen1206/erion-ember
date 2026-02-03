@@ -166,4 +166,4 @@ class MetadataStore {
   }
 }
 
-module.exports = MetadataStore;
+export default MetadataStore;

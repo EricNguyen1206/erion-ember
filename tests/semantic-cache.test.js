@@ -1,4 +1,4 @@
-const SemanticCache = require('../src/lib/semantic-cache');
+import SemanticCache from '../src/lib/semantic-cache.js';
 
 describe('SemanticCache', () => {
   let cache;

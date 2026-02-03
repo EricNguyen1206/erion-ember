@@ -1,0 +1,806 @@
+﻿2026-01-31T17:49:23.6339234Z Current runner version: '2.331.0'
+2026-01-31T17:49:23.6364028Z ##[group]Runner Image Provisioner
+2026-01-31T17:49:23.6364896Z Hosted Compute Agent
+2026-01-31T17:49:23.6365429Z Version: 20260123.484
+2026-01-31T17:49:23.6366009Z Commit: 6bd6555ca37d84114959e1c76d2c01448ff61c5d
+2026-01-31T17:49:23.6366740Z Build Date: 2026-01-23T19:41:17Z
+2026-01-31T17:49:23.6367424Z Worker ID: {e1d6e20c-87bd-4530-bc4c-79f7bfadeb42}
+2026-01-31T17:49:23.6368222Z Azure Region: northcentralus
+2026-01-31T17:49:23.6368747Z ##[endgroup]
+2026-01-31T17:49:23.6370215Z ##[group]Operating System
+2026-01-31T17:49:23.6370955Z Ubuntu
+2026-01-31T17:49:23.6371385Z 24.04.3
+2026-01-31T17:49:23.6371932Z LTS
+2026-01-31T17:49:23.6372420Z ##[endgroup]
+2026-01-31T17:49:23.6372863Z ##[group]Runner Image
+2026-01-31T17:49:23.6373726Z Image: ubuntu-24.04
+2026-01-31T17:49:23.6374272Z Version: 20260126.10.1
+2026-01-31T17:49:23.6375580Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260126.10/images/ubuntu/Ubuntu2404-Readme.md
+2026-01-31T17:49:23.6377009Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260126.10
+2026-01-31T17:49:23.6377939Z ##[endgroup]
+2026-01-31T17:49:23.6379086Z ##[group]GITHUB_TOKEN Permissions
+2026-01-31T17:49:23.6381409Z Contents: read
+2026-01-31T17:49:23.6382044Z Metadata: read
+2026-01-31T17:49:23.6382558Z PullRequests: write
+2026-01-31T17:49:23.6383054Z ##[endgroup]
+2026-01-31T17:49:23.6385127Z Secret source: Actions
+2026-01-31T17:49:23.6385889Z Prepare workflow directory
+2026-01-31T17:49:23.6922919Z Prepare all required actions
+2026-01-31T17:49:23.6961234Z Getting action download info
+2026-01-31T17:49:24.0109753Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-01-31T17:49:24.1004796Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-01-31T17:49:24.2853144Z Complete job name: AI Code Review
+2026-01-31T17:49:24.3484326Z ##[group]Run actions/checkout@v4
+2026-01-31T17:49:24.3485194Z with:
+2026-01-31T17:49:24.3485579Z   fetch-depth: 0
+2026-01-31T17:49:24.3486012Z   repository: EricNguyen1206/erion-ember
+2026-01-31T17:49:24.3486725Z   token: ***
+2026-01-31T17:49:24.3487110Z   ssh-strict: true
+2026-01-31T17:49:24.3487490Z   ssh-user: git
+2026-01-31T17:49:24.3487891Z   persist-credentials: true
+2026-01-31T17:49:24.3488327Z   clean: true
+2026-01-31T17:49:24.3488723Z   sparse-checkout-cone-mode: true
+2026-01-31T17:49:24.3489204Z   fetch-tags: false
+2026-01-31T17:49:24.3489595Z   show-progress: true
+2026-01-31T17:49:24.3490002Z   lfs: false
+2026-01-31T17:49:24.3490370Z   submodules: false
+2026-01-31T17:49:24.3490761Z   set-safe-directory: true
+2026-01-31T17:49:24.3491590Z env:
+2026-01-31T17:49:24.3492079Z   AI_API_URL: https://api.openai.com/v1/chat/completions
+2026-01-31T17:49:24.3492672Z   AI_MODEL: gpt-4o-mini
+2026-01-31T17:49:24.3493189Z ##[endgroup]
+2026-01-31T17:49:24.4577316Z Syncing repository: EricNguyen1206/erion-ember
+2026-01-31T17:49:24.4579115Z ##[group]Getting Git version info
+2026-01-31T17:49:24.4579854Z Working directory is '/home/runner/work/erion-ember/erion-ember'
+2026-01-31T17:49:24.4581128Z [command]/usr/bin/git version
+2026-01-31T17:49:24.4667157Z git version 2.52.0
+2026-01-31T17:49:24.4693546Z ##[endgroup]
+2026-01-31T17:49:24.4707984Z Temporarily overriding HOME='/home/runner/work/_temp/333402e3-6244-4036-a8d9-76d3a7bcdbe2' before making global git config changes
+2026-01-31T17:49:24.4710161Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-31T17:49:24.4713476Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/erion-ember/erion-ember
+2026-01-31T17:49:24.4754136Z Deleting the contents of '/home/runner/work/erion-ember/erion-ember'
+2026-01-31T17:49:24.4757663Z ##[group]Initializing the repository
+2026-01-31T17:49:24.4761805Z [command]/usr/bin/git init /home/runner/work/erion-ember/erion-ember
+2026-01-31T17:49:24.4857592Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-01-31T17:49:24.4858968Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-01-31T17:49:24.4859872Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-01-31T17:49:24.4860580Z hint: call:
+2026-01-31T17:49:24.4861327Z hint:
+2026-01-31T17:49:24.4862123Z hint: 	git config --global init.defaultBranch <name>
+2026-01-31T17:49:24.4862900Z hint:
+2026-01-31T17:49:24.4863442Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-01-31T17:49:24.4864334Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-01-31T17:49:24.4865046Z hint:
+2026-01-31T17:49:24.4865426Z hint: 	git branch -m <name>
+2026-01-31T17:49:24.4865860Z hint:
+2026-01-31T17:49:24.4866444Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-01-31T17:49:24.4867852Z Initialized empty Git repository in /home/runner/work/erion-ember/erion-ember/.git/
+2026-01-31T17:49:24.4874275Z [command]/usr/bin/git remote add origin https://github.com/EricNguyen1206/erion-ember
+2026-01-31T17:49:24.4917635Z ##[endgroup]
+2026-01-31T17:49:24.4918333Z ##[group]Disabling automatic garbage collection
+2026-01-31T17:49:24.4921772Z [command]/usr/bin/git config --local gc.auto 0
+2026-01-31T17:49:24.4949825Z ##[endgroup]
+2026-01-31T17:49:24.4950482Z ##[group]Setting up auth
+2026-01-31T17:49:24.4956615Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-31T17:49:24.4986143Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-31T17:49:24.5328623Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-31T17:49:24.5359093Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-31T17:49:24.5580606Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-31T17:49:24.5620205Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-31T17:49:24.5844029Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-01-31T17:49:24.5878522Z ##[endgroup]
+2026-01-31T17:49:24.5879242Z ##[group]Fetching the repository
+2026-01-31T17:49:24.5887968Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +dbb078aef9efcbdfec51edf89f1c8ce8d7736069:refs/remotes/pull/3/merge
+2026-01-31T17:49:24.9290590Z From https://github.com/EricNguyen1206/erion-ember
+2026-01-31T17:49:24.9292583Z  * [new branch]      develop                                  -> origin/develop
+2026-01-31T17:49:24.9294227Z  * [new branch]      main                                     -> origin/main
+2026-01-31T17:49:24.9295869Z  * [new branch]      main-legacy                              -> origin/main-legacy
+2026-01-31T17:49:24.9297581Z  * [new ref]         dbb078aef9efcbdfec51edf89f1c8ce8d7736069 -> pull/3/merge
+2026-01-31T17:49:24.9332797Z ##[endgroup]
+2026-01-31T17:49:24.9334093Z ##[group]Determining the checkout info
+2026-01-31T17:49:24.9335236Z ##[endgroup]
+2026-01-31T17:49:24.9339060Z [command]/usr/bin/git sparse-checkout disable
+2026-01-31T17:49:24.9382039Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-01-31T17:49:24.9409232Z ##[group]Checking out the ref
+2026-01-31T17:49:24.9413929Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/3/merge
+2026-01-31T17:49:24.9497434Z Note: switching to 'refs/remotes/pull/3/merge'.
+2026-01-31T17:49:24.9498270Z 
+2026-01-31T17:49:24.9499030Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-01-31T17:49:24.9500694Z changes and commit them, and you can discard any commits you make in this
+2026-01-31T17:49:24.9502868Z state without impacting any branches by switching back to a branch.
+2026-01-31T17:49:24.9503527Z 
+2026-01-31T17:49:24.9503896Z If you want to create a new branch to retain commits you create, you may
+2026-01-31T17:49:24.9504783Z do so (now or later) by using -c with the switch command. Example:
+2026-01-31T17:49:24.9505276Z 
+2026-01-31T17:49:24.9505494Z   git switch -c <new-branch-name>
+2026-01-31T17:49:24.9505831Z 
+2026-01-31T17:49:24.9506235Z Or undo this operation with:
+2026-01-31T17:49:24.9506832Z 
+2026-01-31T17:49:24.9507148Z   git switch -
+2026-01-31T17:49:24.9507569Z 
+2026-01-31T17:49:24.9507999Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-01-31T17:49:24.9508902Z 
+2026-01-31T17:49:24.9509661Z HEAD is now at dbb078a Merge 40d2bacbc35038b3405901da1cd7db4cd4f4f39c into 374a026d4b706bd65055c2608d5e910e45673769
+2026-01-31T17:49:24.9512262Z ##[endgroup]
+2026-01-31T17:49:24.9542822Z [command]/usr/bin/git log -1 --format=%H
+2026-01-31T17:49:24.9564936Z dbb078aef9efcbdfec51edf89f1c8ce8d7736069
+2026-01-31T17:49:24.9812858Z ##[group]Run actions/setup-node@v4
+2026-01-31T17:49:24.9813454Z with:
+2026-01-31T17:49:24.9813835Z   node-version: 20
+2026-01-31T17:49:24.9814258Z   always-auth: false
+2026-01-31T17:49:24.9814726Z   check-latest: false
+2026-01-31T17:49:24.9815334Z   token: ***
+2026-01-31T17:49:24.9815721Z env:
+2026-01-31T17:49:24.9816186Z   AI_API_URL: https://api.openai.com/v1/chat/completions
+2026-01-31T17:49:24.9816804Z   AI_MODEL: gpt-4o-mini
+2026-01-31T17:49:24.9817232Z ##[endgroup]
+2026-01-31T17:49:25.1634424Z Found in cache @ /opt/hostedtoolcache/node/20.20.0/x64
+2026-01-31T17:49:25.1642269Z ##[group]Environment details
+2026-01-31T17:49:25.5181035Z node: v20.20.0
+2026-01-31T17:49:25.5182233Z npm: 10.8.2
+2026-01-31T17:49:25.5183189Z yarn: 1.22.22
+2026-01-31T17:49:25.5185363Z ##[endgroup]
+2026-01-31T17:49:25.5353970Z ##[group]Run gh pr diff 3 > pr_diff.txt
+2026-01-31T17:49:25.5355473Z [36;1mgh pr diff 3 > pr_diff.txt[0m
+2026-01-31T17:49:25.5356867Z [36;1mecho "Retrieved PR diff for PR #3"[0m
+2026-01-31T17:49:25.5358448Z [36;1mecho "Diff size: $(wc -c < pr_diff.txt) bytes"[0m
+2026-01-31T17:49:25.5403868Z shell: /usr/bin/bash -e {0}
+2026-01-31T17:49:25.5404982Z env:
+2026-01-31T17:49:25.5406082Z   AI_API_URL: https://api.openai.com/v1/chat/completions
+2026-01-31T17:49:25.5407616Z   AI_MODEL: gpt-4o-mini
+2026-01-31T17:49:25.5409060Z   GH_TOKEN: ***
+2026-01-31T17:49:25.5409957Z ##[endgroup]
+2026-01-31T17:49:26.0757838Z Retrieved PR diff for PR #3
+2026-01-31T17:49:26.0877117Z Diff size: 287915 bytes
+2026-01-31T17:49:26.0950050Z ##[group]Run echo "Waiting 30 seconds to avoid API cold start issues..."
+2026-01-31T17:49:26.0952249Z [36;1mecho "Waiting 30 seconds to avoid API cold start issues..."[0m
+2026-01-31T17:49:26.0953720Z [36;1msleep 30[0m
+2026-01-31T17:49:26.0987734Z shell: /usr/bin/bash -e {0}
+2026-01-31T17:49:26.0988673Z env:
+2026-01-31T17:49:26.0989603Z   AI_API_URL: https://api.openai.com/v1/chat/completions
+2026-01-31T17:49:26.0991115Z   AI_MODEL: gpt-4o-mini
+2026-01-31T17:49:26.0991969Z ##[endgroup]
+2026-01-31T17:49:26.1060079Z Waiting 30 seconds to avoid API cold start issues...
+2026-01-31T17:49:56.1129807Z ##[group]Run node .github/scripts/review-pr.js --diff=pr_diff.txt
+2026-01-31T17:49:56.1130361Z [36;1mnode .github/scripts/review-pr.js --diff=pr_diff.txt[0m
+2026-01-31T17:49:56.1163431Z shell: /usr/bin/bash -e {0}
+2026-01-31T17:49:56.1163720Z env:
+2026-01-31T17:49:56.1164039Z   AI_API_URL: https://api.openai.com/v1/chat/completions
+2026-01-31T17:49:56.1164409Z   AI_MODEL: gpt-4o-mini
+2026-01-31T17:49:56.1164905Z   AI_API_KEY: ***
+2026-01-31T17:49:56.1165329Z   GITHUB_TOKEN: ***
+2026-01-31T17:49:56.1165607Z   GITHUB_REPOSITORY: EricNguyen1206/erion-ember
+2026-01-31T17:49:56.1165927Z   PR_NUMBER: 3
+2026-01-31T17:49:56.1166211Z   COMMIT_SHA: 40d2bacbc35038b3405901da1cd7db4cd4f4f39c
+2026-01-31T17:49:56.1166583Z   PR_TITLE: Feature: Semantic cache and benchmark K6
+2026-01-31T17:49:56.1167151Z   PR_BODY: 
+2026-01-31T17:49:56.1167359Z ##[endgroup]
+2026-01-31T17:49:56.1487797Z [INFO] Starting AI Code Review...
+2026-01-31T17:49:56.1580358Z [INFO] Found 57 files with changes
+2026-01-31T17:49:56.1581439Z [INFO] Reviewing: .github/scripts/review-pr.js
+2026-01-31T17:49:56.1591300Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.1592232Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.2848744Z [ERROR] Failed to review .github/scripts/review-pr.js: Error: API returned status 401: {
+2026-01-31T17:49:56.2850045Z     "error": {
+2026-01-31T17:49:56.2852067Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.2853573Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.2854082Z         "param": null,
+2026-01-31T17:49:56.2854456Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.2854809Z     }
+2026-01-31T17:49:56.2855071Z }
+2026-01-31T17:49:56.2855259Z 
+2026-01-31T17:49:56.2855885Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.2856789Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.2857371Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.2858129Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.2858954Z [INFO] Skipping non-code file: .github/workflows/core-tests.yml
+2026-01-31T17:49:56.2859688Z [INFO] Skipping non-code file: .github/workflows/k6-benchmark.yml
+2026-01-31T17:49:56.2860372Z [INFO] Skipping non-code file: .github/workflows/pr-review.yml
+2026-01-31T17:49:56.2861062Z [INFO] Reviewing: .gitignore
+2026-01-31T17:49:56.2861524Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.2862006Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.3621179Z [ERROR] Failed to review .gitignore: Error: API returned status 401: {
+2026-01-31T17:49:56.3622290Z     "error": {
+2026-01-31T17:49:56.3623904Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.3625462Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.3626078Z         "param": null,
+2026-01-31T17:49:56.3626640Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.3627222Z     }
+2026-01-31T17:49:56.3627628Z }
+2026-01-31T17:49:56.3627857Z 
+2026-01-31T17:49:56.3628759Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.3630164Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.3631240Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.3632460Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.3633499Z [INFO] Skipping non-code file: Benchmark.md
+2026-01-31T17:49:56.3634195Z [INFO] Skipping non-code file: README.md
+2026-01-31T17:49:56.3634893Z [INFO] Skipping non-code file: benchmark/README.md
+2026-01-31T17:49:56.3636224Z [INFO] Skipping non-code file: benchmark/grafana/dashboards/dashboard.yml
+2026-01-31T17:49:56.3636895Z [INFO] Skipping non-code file: benchmark/grafana/datasources/datasource.yml
+2026-01-31T17:49:56.3637381Z [INFO] Reviewing: benchmark/k6/lib/data.js
+2026-01-31T17:49:56.3637767Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.3638139Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.4413042Z [ERROR] Failed to review benchmark/k6/lib/data.js: Error: API returned status 401: {
+2026-01-31T17:49:56.4414014Z     "error": {
+2026-01-31T17:49:56.4415396Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.4416675Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.4417584Z         "param": null,
+2026-01-31T17:49:56.4418015Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.4418423Z     }
+2026-01-31T17:49:56.4418719Z }
+2026-01-31T17:49:56.4418903Z 
+2026-01-31T17:49:56.4419680Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.4420490Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.4421240Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.4421872Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.4422459Z [INFO] Reviewing: benchmark/k6/load-test.js
+2026-01-31T17:49:56.4422893Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.4423273Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.5387915Z [ERROR] Failed to review benchmark/k6/load-test.js: Error: API returned status 401: {
+2026-01-31T17:49:56.5388893Z     "error": {
+2026-01-31T17:49:56.5390403Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.5392063Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.5392443Z         "param": null,
+2026-01-31T17:49:56.5392776Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.5393097Z     }
+2026-01-31T17:49:56.5393324Z }
+2026-01-31T17:49:56.5393453Z 
+2026-01-31T17:49:56.5394059Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.5394910Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.5395466Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.5396261Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.5396849Z [INFO] Reviewing: benchmark/k6/smoke-test.js
+2026-01-31T17:49:56.5397239Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.5397608Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.6063068Z [ERROR] Failed to review benchmark/k6/smoke-test.js: Error: API returned status 401: {
+2026-01-31T17:49:56.6063912Z     "error": {
+2026-01-31T17:49:56.6065195Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.6066334Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.6066657Z         "param": null,
+2026-01-31T17:49:56.6066945Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.6067220Z     }
+2026-01-31T17:49:56.6067409Z }
+2026-01-31T17:49:56.6067515Z 
+2026-01-31T17:49:56.6068161Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.6069273Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.6069764Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.6070429Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.6071259Z [INFO] Reviewing: benchmark/k6/soak-test.js
+2026-01-31T17:49:56.6072014Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.6072438Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.7061566Z [ERROR] Failed to review benchmark/k6/soak-test.js: Error: API returned status 401: {
+2026-01-31T17:49:56.7062424Z     "error": {
+2026-01-31T17:49:56.7063656Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.7064899Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.7065344Z         "param": null,
+2026-01-31T17:49:56.7065752Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.7066238Z     }
+2026-01-31T17:49:56.7066405Z }
+2026-01-31T17:49:56.7066496Z 
+2026-01-31T17:49:56.7066925Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.7067895Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.7068305Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.7068823Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.7069363Z [INFO] Reviewing: benchmark/k6/stress-test.js
+2026-01-31T17:49:56.7069704Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.7070012Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.7694051Z [ERROR] Failed to review benchmark/k6/stress-test.js: Error: API returned status 401: {
+2026-01-31T17:49:56.7695258Z     "error": {
+2026-01-31T17:49:56.7696972Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.7698427Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.7698974Z         "param": null,
+2026-01-31T17:49:56.7699561Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.7699872Z     }
+2026-01-31T17:49:56.7700075Z }
+2026-01-31T17:49:56.7700204Z 
+2026-01-31T17:49:56.7700744Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.7701811Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.7702317Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.7702980Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.7703693Z [INFO] Skipping non-code file: benchmark/package.json
+2026-01-31T17:49:56.7704146Z [INFO] Reviewing: core/Dockerfile
+2026-01-31T17:49:56.7704701Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.7705108Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.8399611Z [ERROR] Failed to review core/Dockerfile: Error: API returned status 401: {
+2026-01-31T17:49:56.8401092Z     "error": {
+2026-01-31T17:49:56.8402749Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.8404216Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.8404653Z         "param": null,
+2026-01-31T17:49:56.8405096Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.8405618Z     }
+2026-01-31T17:49:56.8405823Z }
+2026-01-31T17:49:56.8405936Z 
+2026-01-31T17:49:56.8406487Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.8407253Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.8407757Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.8408430Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.8409076Z [INFO] Skipping non-code file: core/README.md
+2026-01-31T17:49:56.8409550Z [INFO] Skipping non-code file: core/package.json
+2026-01-31T17:49:56.8410013Z [INFO] Reviewing: core/src/cache/compressor.js
+2026-01-31T17:49:56.8411070Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.8411518Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.9122139Z [ERROR] Failed to review core/src/cache/compressor.js: Error: API returned status 401: {
+2026-01-31T17:49:56.9123348Z     "error": {
+2026-01-31T17:49:56.9124618Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.9126049Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.9126592Z         "param": null,
+2026-01-31T17:49:56.9127076Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.9127445Z     }
+2026-01-31T17:49:56.9127691Z }
+2026-01-31T17:49:56.9127849Z 
+2026-01-31T17:49:56.9128678Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.9129786Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.9130271Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.9131159Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.9131771Z [INFO] Reviewing: core/src/cache/hnsw-index.js
+2026-01-31T17:49:56.9132185Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.9132559Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:56.9907128Z [ERROR] Failed to review core/src/cache/hnsw-index.js: Error: API returned status 401: {
+2026-01-31T17:49:56.9908071Z     "error": {
+2026-01-31T17:49:56.9909466Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:56.9911066Z         "type": "invalid_request_error",
+2026-01-31T17:49:56.9911444Z         "param": null,
+2026-01-31T17:49:56.9911747Z         "code": "invalid_api_key"
+2026-01-31T17:49:56.9912014Z     }
+2026-01-31T17:49:56.9912200Z }
+2026-01-31T17:49:56.9912315Z 
+2026-01-31T17:49:56.9912823Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:56.9913524Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:56.9913984Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:56.9914606Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:56.9915171Z [INFO] Reviewing: core/src/cache/index.js
+2026-01-31T17:49:56.9915501Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:56.9915804Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.0653603Z [ERROR] Failed to review core/src/cache/index.js: Error: API returned status 401: {
+2026-01-31T17:49:57.0654706Z     "error": {
+2026-01-31T17:49:57.0656426Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.0658004Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.0658466Z         "param": null,
+2026-01-31T17:49:57.0658913Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.0659428Z     }
+2026-01-31T17:49:57.0659623Z }
+2026-01-31T17:49:57.0659739Z 
+2026-01-31T17:49:57.0660269Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.0661314Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.0661807Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.0662464Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.0663170Z [INFO] Reviewing: core/src/cache/metadata-store.js
+2026-01-31T17:49:57.0663626Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.0664036Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.1323133Z [ERROR] Failed to review core/src/cache/metadata-store.js: Error: API returned status 401: {
+2026-01-31T17:49:57.1324073Z     "error": {
+2026-01-31T17:49:57.1325348Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.1326746Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.1327066Z         "param": null,
+2026-01-31T17:49:57.1327343Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.1327600Z     }
+2026-01-31T17:49:57.1327755Z }
+2026-01-31T17:49:57.1327839Z 
+2026-01-31T17:49:57.1328256Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.1328837Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.1329231Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.1329980Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.1330493Z [INFO] Reviewing: core/src/cache/normalizer.js
+2026-01-31T17:49:57.1331117Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.1331467Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.1887761Z [ERROR] Failed to review core/src/cache/normalizer.js: Error: API returned status 401: {
+2026-01-31T17:49:57.1888918Z     "error": {
+2026-01-31T17:49:57.1890189Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.1891588Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.1891897Z         "param": null,
+2026-01-31T17:49:57.1892188Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.1892453Z     }
+2026-01-31T17:49:57.1892627Z }
+2026-01-31T17:49:57.1892733Z 
+2026-01-31T17:49:57.1893244Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.1893960Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.1894405Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.1895034Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.1895644Z [INFO] Reviewing: core/src/cache/quantizer.js
+2026-01-31T17:49:57.1896056Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.1896415Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.2491997Z [ERROR] Failed to review core/src/cache/quantizer.js: Error: API returned status 401: {
+2026-01-31T17:49:57.2492893Z     "error": {
+2026-01-31T17:49:57.2494232Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.2495775Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.2496327Z         "param": null,
+2026-01-31T17:49:57.2496782Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.2497169Z     }
+2026-01-31T17:49:57.2497438Z }
+2026-01-31T17:49:57.2497596Z 
+2026-01-31T17:49:57.2498422Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.2499593Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.2500315Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.2501415Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.2502323Z [INFO] Reviewing: core/src/cache/semantic-cache.js
+2026-01-31T17:49:57.2502924Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.2503454Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.3055835Z [ERROR] Failed to review core/src/cache/semantic-cache.js: Error: API returned status 401: {
+2026-01-31T17:49:57.3056831Z     "error": {
+2026-01-31T17:49:57.3058581Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.3060081Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.3060425Z         "param": null,
+2026-01-31T17:49:57.3060726Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.3061263Z     }
+2026-01-31T17:49:57.3061425Z }
+2026-01-31T17:49:57.3061517Z 
+2026-01-31T17:49:57.3061945Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.3062546Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.3062930Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.3063443Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.3063940Z [INFO] Reviewing: core/src/cache/simple-cache.js
+2026-01-31T17:49:57.3064482Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.3064800Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.3679410Z [ERROR] Failed to review core/src/cache/simple-cache.js: Error: API returned status 401: {
+2026-01-31T17:49:57.3680583Z     "error": {
+2026-01-31T17:49:57.3682320Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.3683291Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.3683596Z         "param": null,
+2026-01-31T17:49:57.3683870Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.3684137Z     }
+2026-01-31T17:49:57.3684312Z }
+2026-01-31T17:49:57.3684419Z 
+2026-01-31T17:49:57.3684910Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.3685612Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.3686073Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.3686679Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.3687251Z [INFO] Reviewing: core/src/routes/chat.js
+2026-01-31T17:49:57.3687638Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.3687990Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.4349998Z [ERROR] Failed to review core/src/routes/chat.js: Error: API returned status 401: {
+2026-01-31T17:49:57.4351127Z     "error": {
+2026-01-31T17:49:57.4352501Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.4353856Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.4354363Z         "param": null,
+2026-01-31T17:49:57.4354806Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.4355246Z     }
+2026-01-31T17:49:57.4355548Z }
+2026-01-31T17:49:57.4355745Z 
+2026-01-31T17:49:57.4356511Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.4357283Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.4357786Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.4358441Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.4359054Z [INFO] Reviewing: core/src/server.js
+2026-01-31T17:49:57.4359475Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.4359874Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.5054932Z [ERROR] Failed to review core/src/server.js: Error: API returned status 401: {
+2026-01-31T17:49:57.5055709Z     "error": {
+2026-01-31T17:49:57.5056938Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.5057984Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.5058373Z         "param": null,
+2026-01-31T17:49:57.5058714Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.5059430Z     }
+2026-01-31T17:49:57.5059661Z }
+2026-01-31T17:49:57.5059793Z 
+2026-01-31T17:49:57.5060407Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.5061556Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.5062129Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.5062907Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.5063646Z [INFO] Reviewing: core/tests/server.test.js
+2026-01-31T17:49:57.5064147Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.5064567Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.5726575Z [ERROR] Failed to review core/tests/server.test.js: Error: API returned status 401: {
+2026-01-31T17:49:57.5727877Z     "error": {
+2026-01-31T17:49:57.5729257Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.5730402Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.5731078Z         "param": null,
+2026-01-31T17:49:57.5731376Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.5731635Z     }
+2026-01-31T17:49:57.5731817Z }
+2026-01-31T17:49:57.5731917Z 
+2026-01-31T17:49:57.5732409Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.5733101Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.5733556Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.5734168Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.5734783Z [INFO] Skipping non-code file: docker-compose.yml
+2026-01-31T17:49:57.5735184Z [INFO] Reviewing: docker-run.sh
+2026-01-31T17:49:57.5735547Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.5735891Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.6354812Z [ERROR] Failed to review docker-run.sh: Error: API returned status 401: {
+2026-01-31T17:49:57.6355862Z     "error": {
+2026-01-31T17:49:57.6357366Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.6358498Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.6358805Z         "param": null,
+2026-01-31T17:49:57.6359088Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.6359357Z     }
+2026-01-31T17:49:57.6359534Z }
+2026-01-31T17:49:57.6359643Z 
+2026-01-31T17:49:57.6360140Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.6361142Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.6361643Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.6362269Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.6362883Z [INFO] Skipping non-code file: docs/TECHNICAL.md
+2026-01-31T17:49:57.6363479Z [INFO] Skipping non-code file: docs/plans/2026-01-31-benchmark-ci-integration.md
+2026-01-31T17:49:57.6364173Z [INFO] Skipping non-code file: docs/plans/2026-01-31-semantic-cache-design.md
+2026-01-31T17:49:57.6364897Z [INFO] Skipping non-code file: docs/plans/2026-01-31-semantic-cache-implementation.md
+2026-01-31T17:49:57.6365464Z [INFO] Skipping non-code file: package.json
+2026-01-31T17:49:57.6365923Z [INFO] Reviewing: services/mini-redis-core/Dockerfile.bun
+2026-01-31T17:49:57.6366358Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.6366783Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.6932237Z [ERROR] Failed to review services/mini-redis-core/Dockerfile.bun: Error: API returned status 401: {
+2026-01-31T17:49:57.6933321Z     "error": {
+2026-01-31T17:49:57.6937709Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.6938986Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.6939424Z         "param": null,
+2026-01-31T17:49:57.6939738Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.6940009Z     }
+2026-01-31T17:49:57.6940215Z }
+2026-01-31T17:49:57.6940323Z 
+2026-01-31T17:49:57.6940758Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.6941641Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.6942073Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.6942656Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.6943399Z [INFO] Reviewing: services/semantic-cache/.gitignore
+2026-01-31T17:49:57.6943819Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.6944176Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.7774709Z [ERROR] Failed to review services/semantic-cache/.gitignore: Error: API returned status 401: {
+2026-01-31T17:49:57.7775510Z     "error": {
+2026-01-31T17:49:57.7776620Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.7777720Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.7778151Z         "param": null,
+2026-01-31T17:49:57.7778560Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.7778943Z     }
+2026-01-31T17:49:57.7779208Z }
+2026-01-31T17:49:57.7779370Z 
+2026-01-31T17:49:57.7779912Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.7780721Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.7781475Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.7782169Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.7782948Z [INFO] Skipping non-code file: services/semantic-cache/CHANGELOG.md
+2026-01-31T17:49:57.7783553Z [INFO] Reviewing: services/semantic-cache/Dockerfile
+2026-01-31T17:49:57.7784032Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.7784448Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.8281151Z [ERROR] Failed to review services/semantic-cache/Dockerfile: Error: API returned status 401: {
+2026-01-31T17:49:57.8282140Z     "error": {
+2026-01-31T17:49:57.8283384Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.8284934Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.8285612Z         "param": null,
+2026-01-31T17:49:57.8286141Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.8286703Z     }
+2026-01-31T17:49:57.8287105Z }
+2026-01-31T17:49:57.8287327Z 
+2026-01-31T17:49:57.8288299Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.8289824Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.8290732Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.8291873Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.8292937Z [INFO] Skipping non-code file: services/semantic-cache/README.md
+2026-01-31T17:49:57.8293904Z [INFO] Skipping non-code file: services/semantic-cache/docker-compose.yml
+2026-01-31T17:49:57.8294931Z [INFO] Skipping non-code file: services/semantic-cache/package.json
+2026-01-31T17:49:57.8295828Z [INFO] Reviewing: services/semantic-cache/src/compressor.js
+2026-01-31T17:49:57.8296613Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.8297208Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.8979319Z [ERROR] Failed to review services/semantic-cache/src/compressor.js: Error: API returned status 401: {
+2026-01-31T17:49:57.8980228Z     "error": {
+2026-01-31T17:49:57.8981781Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.8983134Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.8983638Z         "param": null,
+2026-01-31T17:49:57.8984075Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.8984469Z     }
+2026-01-31T17:49:57.8984789Z }
+2026-01-31T17:49:57.8984965Z 
+2026-01-31T17:49:57.8985789Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.8987033Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.8988057Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.8989022Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.8990094Z [INFO] Reviewing: services/semantic-cache/src/hnsw-index.js
+2026-01-31T17:49:57.8991186Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.8991882Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:57.9501627Z [ERROR] Failed to review services/semantic-cache/src/hnsw-index.js: Error: API returned status 401: {
+2026-01-31T17:49:57.9502715Z     "error": {
+2026-01-31T17:49:57.9503618Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:57.9504505Z         "type": "invalid_request_error",
+2026-01-31T17:49:57.9504830Z         "param": null,
+2026-01-31T17:49:57.9505132Z         "code": "invalid_api_key"
+2026-01-31T17:49:57.9505448Z     }
+2026-01-31T17:49:57.9505645Z }
+2026-01-31T17:49:57.9505764Z 
+2026-01-31T17:49:57.9506307Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:57.9507073Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:57.9507565Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:57.9508235Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:57.9508921Z [INFO] Reviewing: services/semantic-cache/src/index.js
+2026-01-31T17:49:57.9509402Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:57.9509798Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.0125795Z [ERROR] Failed to review services/semantic-cache/src/index.js: Error: API returned status 401: {
+2026-01-31T17:49:58.0127006Z     "error": {
+2026-01-31T17:49:58.0128088Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.0129204Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.0129608Z         "param": null,
+2026-01-31T17:49:58.0130018Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.0130371Z     }
+2026-01-31T17:49:58.0130615Z }
+2026-01-31T17:49:58.0130751Z 
+2026-01-31T17:49:58.0131691Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.0132667Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.0133278Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.0134062Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.0134807Z [INFO] Reviewing: services/semantic-cache/src/metadata-store.js
+2026-01-31T17:49:58.0135324Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.0135726Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.0682389Z [ERROR] Failed to review services/semantic-cache/src/metadata-store.js: Error: API returned status 401: {
+2026-01-31T17:49:58.0683333Z     "error": {
+2026-01-31T17:49:58.0685075Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.0686043Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.0686402Z         "param": null,
+2026-01-31T17:49:58.0686715Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.0687029Z     }
+2026-01-31T17:49:58.0687246Z }
+2026-01-31T17:49:58.0687367Z 
+2026-01-31T17:49:58.0687940Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.0688761Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.0689306Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.0690041Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.0691172Z [INFO] Reviewing: services/semantic-cache/src/normalizer.js
+2026-01-31T17:49:58.0691736Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.0692178Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.1455245Z [ERROR] Failed to review services/semantic-cache/src/normalizer.js: Error: API returned status 401: {
+2026-01-31T17:49:58.1456196Z     "error": {
+2026-01-31T17:49:58.1457152Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.1458115Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.1458471Z         "param": null,
+2026-01-31T17:49:58.1458787Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.1459091Z     }
+2026-01-31T17:49:58.1459297Z }
+2026-01-31T17:49:58.1459427Z 
+2026-01-31T17:49:58.1459998Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.1461179Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.1461745Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.1462466Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.1463225Z [INFO] Reviewing: services/semantic-cache/src/quantizer.js
+2026-01-31T17:49:58.1463752Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.1464180Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.2144628Z [ERROR] Failed to review services/semantic-cache/src/quantizer.js: Error: API returned status 401: {
+2026-01-31T17:49:58.2145713Z     "error": {
+2026-01-31T17:49:58.2146983Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.2148101Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.2148499Z         "param": null,
+2026-01-31T17:49:58.2148824Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.2149137Z     }
+2026-01-31T17:49:58.2149360Z }
+2026-01-31T17:49:58.2149501Z 
+2026-01-31T17:49:58.2150094Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.2151115Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.2151669Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.2152410Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.2153221Z [INFO] Reviewing: services/semantic-cache/src/semantic-cache.js
+2026-01-31T17:49:58.2153794Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.2154242Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.2839014Z [ERROR] Failed to review services/semantic-cache/src/semantic-cache.js: Error: API returned status 401: {
+2026-01-31T17:49:58.2840370Z     "error": {
+2026-01-31T17:49:58.2842387Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.2843527Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.2843943Z         "param": null,
+2026-01-31T17:49:58.2844313Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.2844677Z     }
+2026-01-31T17:49:58.2844929Z }
+2026-01-31T17:49:58.2845069Z 
+2026-01-31T17:49:58.2845749Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.2846715Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.2847345Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.2848201Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.2849040Z [INFO] Reviewing: services/semantic-cache/test/compressor.test.js
+2026-01-31T17:49:58.2849720Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.2850123Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.3614703Z [ERROR] Failed to review services/semantic-cache/test/compressor.test.js: Error: API returned status 401: {
+2026-01-31T17:49:58.3615917Z     "error": {
+2026-01-31T17:49:58.3616919Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.3617929Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.3618299Z         "param": null,
+2026-01-31T17:49:58.3618639Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.3618965Z     }
+2026-01-31T17:49:58.3619184Z }
+2026-01-31T17:49:58.3619316Z 
+2026-01-31T17:49:58.3619936Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.3621012Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.3621538Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.3622219Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.3622975Z [INFO] Reviewing: services/semantic-cache/test/hnsw-index.test.js
+2026-01-31T17:49:58.3623505Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.3623904Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.4236457Z [ERROR] Failed to review services/semantic-cache/test/hnsw-index.test.js: Error: API returned status 401: {
+2026-01-31T17:49:58.4237670Z     "error": {
+2026-01-31T17:49:58.4239086Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.4240612Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.4241539Z         "param": null,
+2026-01-31T17:49:58.4242012Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.4242487Z     }
+2026-01-31T17:49:58.4242808Z }
+2026-01-31T17:49:58.4242982Z 
+2026-01-31T17:49:58.4243768Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.4244969Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.4264780Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.4265694Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.4266770Z [INFO] Reviewing: services/semantic-cache/test/metadata-store.test.js
+2026-01-31T17:49:58.4267607Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.4268076Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.4787651Z [ERROR] Failed to review services/semantic-cache/test/metadata-store.test.js: Error: API returned status 401: {
+2026-01-31T17:49:58.4788500Z     "error": {
+2026-01-31T17:49:58.4789371Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.4790271Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.4791127Z         "param": null,
+2026-01-31T17:49:58.4791439Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.4791733Z     }
+2026-01-31T17:49:58.4791943Z }
+2026-01-31T17:49:58.4792054Z 
+2026-01-31T17:49:58.4792584Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.4793358Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.4793866Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.4794541Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.4795307Z [INFO] Reviewing: services/semantic-cache/test/normalizer.test.js
+2026-01-31T17:49:58.4795844Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.4796390Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.5300640Z [ERROR] Failed to review services/semantic-cache/test/normalizer.test.js: Error: API returned status 401: {
+2026-01-31T17:49:58.5302275Z     "error": {
+2026-01-31T17:49:58.5304025Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.5305383Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.5305884Z         "param": null,
+2026-01-31T17:49:58.5306348Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.5306774Z     }
+2026-01-31T17:49:58.5307088Z }
+2026-01-31T17:49:58.5307259Z 
+2026-01-31T17:49:58.5308082Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.5309279Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.5309942Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.5311145Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.5312303Z [INFO] Reviewing: services/semantic-cache/test/quantizer.test.js
+2026-01-31T17:49:58.5313100Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.5313773Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.6052489Z [ERROR] Failed to review services/semantic-cache/test/quantizer.test.js: Error: API returned status 401: {
+2026-01-31T17:49:58.6053741Z     "error": {
+2026-01-31T17:49:58.6054834Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.6055924Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.6056303Z         "param": null,
+2026-01-31T17:49:58.6056609Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.6056891Z     }
+2026-01-31T17:49:58.6057089Z }
+2026-01-31T17:49:58.6057203Z 
+2026-01-31T17:49:58.6057766Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.6058539Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.6059029Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.6059698Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.6060471Z [INFO] Reviewing: services/semantic-cache/test/semantic-cache.test.js
+2026-01-31T17:49:58.6061192Z [DEBUG] Using AI Provider: api.openai.com
+2026-01-31T17:49:58.6061603Z [DEBUG] Using model: gpt-4o-mini
+2026-01-31T17:49:58.6668572Z [ERROR] Failed to review services/semantic-cache/test/semantic-cache.test.js: Error: API returned status 401: {
+2026-01-31T17:49:58.6669473Z     "error": {
+2026-01-31T17:49:58.6671243Z         "message": "Incorrect API key provided: 46373a36*********************************************t2K2. You can find your API key at https://platform.openai.com/account/api-keys.",
+2026-01-31T17:49:58.6672305Z         "type": "invalid_request_error",
+2026-01-31T17:49:58.6672686Z         "param": null,
+2026-01-31T17:49:58.6673400Z         "code": "invalid_api_key"
+2026-01-31T17:49:58.6673743Z     }
+2026-01-31T17:49:58.6673969Z }
+2026-01-31T17:49:58.6674097Z 
+2026-01-31T17:49:58.6674718Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:198:18)
+2026-01-31T17:49:58.6675590Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:58.6676164Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:58.6676828Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:58.6677404Z [DEBUG] Creating PR review with 0 comments
+2026-01-31T17:49:59.4419709Z [ERROR] GitHub API response: {"message":"Unprocessable Entity","errors":["GitHub Actions is not permitted to approve pull requests."],"documentation_url":"https://docs.github.com/rest/pulls/reviews#create-a-review-for-a-pull-request","status":"422"}
+2026-01-31T17:49:59.4422818Z [ERROR] Error: GitHub API returned status 422
+2026-01-31T17:49:59.4423773Z     at IncomingMessage.<anonymous> (/home/runner/work/erion-ember/erion-ember/.github/scripts/review-pr.js:379:18)
+2026-01-31T17:49:59.4425093Z     at IncomingMessage.emit (node:events:536:35)
+2026-01-31T17:49:59.4425945Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-31T17:49:59.4427058Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-31T17:49:59.4428209Z ## ⚠️ AI Code Review
+2026-01-31T17:49:59.4428398Z 
+2026-01-31T17:49:59.4428600Z Unable to complete automated review.
+2026-01-31T17:49:59.4428855Z 
+2026-01-31T17:49:59.4429068Z **Error:** GitHub API returned status 422
+2026-01-31T17:49:59.4429335Z 
+2026-01-31T17:49:59.4429516Z _Please review the PR manually._
+2026-01-31T17:49:59.4478854Z ##[error]Process completed with exit code 1.
+2026-01-31T17:49:59.4586421Z Post job cleanup.
+2026-01-31T17:49:59.5536212Z [command]/usr/bin/git version
+2026-01-31T17:49:59.5572791Z git version 2.52.0
+2026-01-31T17:49:59.5623826Z Temporarily overriding HOME='/home/runner/work/_temp/5e8feb43-11e9-46fd-ac0a-2c767c619ec9' before making global git config changes
+2026-01-31T17:49:59.5625381Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-31T17:49:59.5628981Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/erion-ember/erion-ember
+2026-01-31T17:49:59.5663429Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-31T17:49:59.5697654Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-31T17:49:59.5927327Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-31T17:49:59.5948158Z http.https://github.com/.extraheader
+2026-01-31T17:49:59.5960202Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-01-31T17:49:59.5989848Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-31T17:49:59.6210157Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-31T17:49:59.6240238Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-31T17:49:59.6562352Z Cleaning up orphan processes

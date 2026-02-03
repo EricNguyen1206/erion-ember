@@ -1,4 +1,4 @@
-const Compressor = require('../src/lib/compressor');
+import Compressor from '../src/lib/compressor.js';
 
 describe('Compressor', () => {
   let compressor;
