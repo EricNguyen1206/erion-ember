@@ -1,4 +1,4 @@
-const HNSWIndex = require('../src/hnsw-index');
+const HNSWIndex = require('../src/lib/hnsw-index');
 
 describe('HNSWIndex', () => {
   let index;
@@ -47,7 +47,8 @@ describe('HNSWIndex', () => {
     const vector = Array(dim).fill(0).map(() => Math.random());
     index.addItem(vector, 42);
     
-    const tempFile = '/app/test-index.bin';
+    const fs = require('fs');
+    const tempFile = './test-index.bin';
     index.save(tempFile);
     
     const newIndex = new HNSWIndex(dim, maxElements, 'cosine');
@@ -57,5 +58,8 @@ describe('HNSWIndex', () => {
     expect(results[0].id).toBe(42);
     
     newIndex.destroy();
+    if (fs.existsSync(tempFile)) {
+      fs.unlinkSync(tempFile);
+    }
   });
 });

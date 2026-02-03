@@ -33,7 +33,7 @@ jobs:
     
     - name: Start services
       run: |
-        docker compose up -d core redis
+        docker compose up -d erion-ember redis
         echo "Waiting for services to be ready..."
         sleep 15
     
