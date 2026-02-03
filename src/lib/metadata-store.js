@@ -13,8 +13,9 @@ class MetadataStore {
    * Store metadata
    * @param {string} id - Entry ID
    * @param {object} data - Metadata
+   * @param {number} [ttl] - Time to live in seconds
    */
-  set(id, data) {
+  set(id, data, ttl) {
     // Check if we need to evict
     if (this.metadata.size >= this.maxSize && !this.metadata.has(id)) {
       this._evictLRU();
@@ -23,9 +24,13 @@ class MetadataStore {
     // Update LRU queue
     this._updateLRU(id);
     
+    // Calculate expiration
+    const expiresAt = ttl ? Date.now() + (ttl * 1000) : null;
+
     // Store metadata
     this.metadata.set(id, {
       ...data,
+      expiresAt,
       lastAccessed: Date.now()
     });
     
@@ -43,6 +48,12 @@ class MetadataStore {
   get(id) {
     const data = this.metadata.get(id);
     if (data) {
+      // Check expiration
+      if (data.expiresAt && Date.now() > data.expiresAt) {
+        this.delete(id);
+        return undefined;
+      }
+
       // Update access time and LRU
       data.lastAccessed = Date.now();
       data.accessCount = (data.accessCount || 0) + 1;
@@ -63,6 +74,12 @@ class MetadataStore {
     if (id) {
       const data = this.metadata.get(id);
       if (data) {
+        // Check expiration
+        if (data.expiresAt && Date.now() > data.expiresAt) {
+          this.delete(id);
+          return undefined;
+        }
+
         // Update access time and LRU
         data.lastAccessed = Date.now();
         data.accessCount = (data.accessCount || 0) + 1;

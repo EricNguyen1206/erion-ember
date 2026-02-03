@@ -13,6 +13,7 @@ class SemanticCache {
     this.maxElements = options.maxElements || 100000;
     this.similarityThreshold = options.similarityThreshold || 0.85;
     this.memoryLimit = options.memoryLimit || '1gb';
+    this.defaultTTL = options.defaultTTL || 3600; // Default TTL: 1 hour (seconds)
     
     // Initialize components
     this.index = new HNSWIndex(this.dim, this.maxElements, 'cosine');
@@ -98,8 +99,9 @@ class SemanticCache {
    * @param {string} prompt - Original prompt
    * @param {string} response - LLM response
    * @param {number[]} embedding - Vector embedding
+   * @param {object} options - Cache options (e.g., ttl)
    */
-  async set(prompt, response, embedding) {
+  async set(prompt, response, embedding, options = {}) {
     // Normalize and hash prompt
     const normalized = this.normalizer.normalize(prompt);
     const promptHash = this.normalizer.hash(prompt);
@@ -132,7 +134,8 @@ class SemanticCache {
       accessCount: 0
     };
     
-    this.metadataStore.set(id, metadata);
+    const ttl = options.ttl || this.defaultTTL;
+    this.metadataStore.set(id, metadata, ttl);
   }
 
   /**
