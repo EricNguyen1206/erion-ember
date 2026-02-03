@@ -1,11 +1,11 @@
-const lz4 = require('lz4');
+const lz4js = require('lz4js');
 
 /**
  * LZ4 Compressor - Fast compression for text data
  */
 class Compressor {
   constructor() {
-    this.compressionLevel = 1; // Fastest
+    this.compressionLevel = 1; // Fastest (Not configurable in lz4js, but kept for API compatibility)
   }
 
   /**
@@ -19,11 +19,8 @@ class Compressor {
     }
     
     const input = Buffer.from(data, 'utf8');
-    const maxSize = lz4.encodeBound(input.length);
-    const output = Buffer.alloc(maxSize);
-    
-    const compressedSize = lz4.encodeBlock(input, output);
-    return output.slice(0, compressedSize);
+    const compressed = lz4js.compress(input);
+    return Buffer.from(compressed);
   }
 
   /**
@@ -37,10 +34,10 @@ class Compressor {
       return '';
     }
     
-    const output = Buffer.alloc(originalSize);
-    const decompressedSize = lz4.decodeBlock(data, output);
-    
-    return output.slice(0, decompressedSize).toString('utf8');
+    // lz4js.decompress returns a new Uint8Array (or Buffer)
+    // It doesn't strictly need originalSize but we keep the signature compatible
+    const decompressed = lz4js.decompress(data);
+    return Buffer.from(decompressed).toString('utf8');
   }
 
   /**
@@ -51,6 +48,7 @@ class Compressor {
    */
   getCompressionRatio(original, compressed) {
     const originalSize = Buffer.byteLength(original, 'utf8');
+    if (originalSize === 0) return 0;
     return compressed.length / originalSize;
   }
 }
