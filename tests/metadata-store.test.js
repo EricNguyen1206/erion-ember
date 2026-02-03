@@ -1,4 +1,4 @@
-const MetadataStore = require('../src/metadata-store');
+const MetadataStore = require('../src/lib/metadata-store');
 
 describe('MetadataStore', () => {
   let store;

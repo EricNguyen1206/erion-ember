@@ -1,4 +1,4 @@
-const Quantizer = require('../src/quantizer');
+const Quantizer = require('../src/lib/quantizer');
 
 describe('Quantizer', () => {
   let quantizer;

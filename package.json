@@ -2,21 +2,28 @@
   "name": "erion-ember",
   "version": "1.0.0",
   "description": "LLM Semantic Cache with K6 Benchmarking",
-  "private": true,
-  "workspaces": [
-    "core",
-    "benchmark"
-  ],
+  "main": "src/server.js",
   "scripts": {
-    "dev": "cd core && bun run dev",
-    "build": "cd core && bun run build",
-    "test": "cd core && bun test",
+    "dev": "bun run --watch src/server.js",
+    "start": "bun run src/server.js",
+    "test": "bun test",
     "benchmark": "docker compose --profile benchmark up",
     "benchmark:local": "cd benchmark && k6 run k6/smoke-test.js",
-    "docker:core": "docker compose up core redis",
+    "docker:core": "docker compose up erion-ember redis",
     "docker:all": "docker compose --profile benchmark up"
   },
-  "devDependencies": {},
+  "dependencies": {
+    "fastify": "^4.24.0",
+    "@fastify/cors": "^8.4.0",
+    "ioredis": "^5.3.0",
+    "zod": "^3.22.0",
+    "hnswlib-node": "^2.0.0",
+    "lz4": "^0.6.0",
+    "xxhash-addon": "^2.0.0"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
   "engines": {
     "node": ">=20.0.0"
   }
