@@ -25,6 +25,11 @@ jobs:
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: latest
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
     
     - name: Install dependencies
       run: bun install
