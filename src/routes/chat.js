@@ -57,6 +57,9 @@ export async function chatRoute(fastify, options) {
       let responseText = '';
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
         const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -66,8 +69,11 @@ export async function chatRoute(fastify, options) {
           body: JSON.stringify({
             model: model,
             messages: [{ role: 'user', content: prompt }]
-          })
+          }),
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!groqResponse.ok) {
           const errorText = await groqResponse.text();
@@ -80,8 +86,17 @@ export async function chatRoute(fastify, options) {
         }
 
         const data = await groqResponse.json();
-        responseText = data.choices[0]?.message?.content || '';
+
+        if (!data.choices?.length || !data.choices[0]?.message?.content) {
+            throw new Error('Invalid response structure from Groq API');
+        }
+
+        responseText = data.choices[0].message.content;
       } catch (err) {
+        if (err.name === 'AbortError') {
+             console.error('Groq API timed out');
+             throw new Error('Groq API timed out');
+        }
         console.error('Failed to call Groq API:', err);
         // Fallback for testing/dev if API key is missing or invalid
         // responseText = `Generated response for: ${prompt} (Fallback)`;
@@ -117,7 +132,12 @@ export async function chatRoute(fastify, options) {
         return { error: 'Invalid input', details: error.errors };
       }
       request.log.error(error);
-      reply.status(500).send({ error: 'Internal Server Error', message: error.message });
+
+      const safeMessage = process.env.NODE_ENV === 'production'
+        ? 'An unexpected error occurred'
+        : error.message;
+
+      reply.status(500).send({ error: 'Internal Server Error', message: safeMessage });
     }
   });
 }

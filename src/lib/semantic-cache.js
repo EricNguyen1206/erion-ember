@@ -212,7 +212,7 @@ class SemanticCache {
     // Save metadata
     const fs = require('fs').promises;
     const metadata = {
-      stats: this.stats,
+      stats: this._statistics,
       store: Array.from(this.metadataStore.metadata.entries()),
       config: {
         dim: this.dim,
