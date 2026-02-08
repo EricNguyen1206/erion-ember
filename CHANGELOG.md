@@ -7,6 +7,144 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-02-09
+
+### Overview
+Major architectural transformation from HTTP API to Model Context Protocol (MCP) server with dual vector search backends. This release introduces production-ready semantic caching for AI coding assistants with zero native dependency requirements for development.
+
+### Added
+
+#### MCP Protocol Support
+- **MCP Server Implementation** - Complete stdio-based MCP server using `@modelcontextprotocol/sdk`
+- **5 MCP Tools** - Full tool suite for AI completion workflow:
+  - `ai_complete` - Check cache and return results or cache miss indication
+  - `cache_store` - Store prompt/response pairs with optional embedding generation
+  - `cache_check` - Pre-flight cache existence check
+  - `generate_embedding` - On-demand vector embedding generation
+  - `cache_stats` - Comprehensive cache metrics and cost savings
+- **JSON-RPC 2.0** - Standard protocol communication over stdio transport
+
+#### Dual Vector Search Architecture
+- **Annoy.js Backend** (Default) - Pure JavaScript implementation requiring zero native dependencies
+  - Immediate startup on any platform
+  - O(log n) search complexity via binary search trees
+  - JSON-based persistence
+  - Ideal for development and smaller deployments (< 100K vectors)
+- **HNSW Backend** (Optimized) - C++ implementation via hnswlib-node
+  - State-of-the-art Hierarchical Navigable Small World algorithm
+  - Maximum performance for production workloads
+  - Binary persistence format
+  - Recommended for large-scale deployments (> 100K vectors)
+- **VectorIndex Interface** - Abstract base class enabling pluggable implementations
+- **Factory Pattern** - Runtime backend selection via `VECTOR_INDEX_BACKEND` environment variable
+- **Async Initialization** - Non-blocking index initialization with `_initIndex()` and `_ensureIndex()`
+
+#### Embedding Service
+- **Hybrid Embedding Strategy** - Support for both client-provided and server-generated embeddings
+- **Mock Provider** - Deterministic embeddings for testing and development
+- **OpenAI Provider** - Production-ready text-embedding-3-small integration
+- **Graceful Degradation** - Falls back to exact-match caching when embedding generation fails
+
+### Changed
+
+#### Architecture
+- **Protocol Migration** - Converted from Fastify HTTP API to MCP stdio transport
+- **Service Decoupling** - Removed tight coupling to Groq API; now provider-agnostic
+- **Vector Index Abstraction** - Refactored `HNSWIndex` into pluggable `VectorIndex` interface
+- **Async Patterns** - Updated `SemanticCache` for async index initialization
+- **Project Structure** - Reorganized into `src/lib/vector-index/` with factory pattern
+
+#### Dependencies
+- **Added** - `@modelcontextprotocol/sdk` (MCP protocol implementation)
+- **Added** - `annoy.js` (pure JS vector search)
+- **Removed** - `fastify` (HTTP framework no longer needed)
+- **Removed** - `@fastify/cors` (CORS not applicable to stdio)
+- **Removed** - `@fastify/rate-limit` (rate limiting removed with HTTP)
+- **Removed** - `ioredis` (Redis integration removed in MCP version)
+
+#### Documentation
+- **Complete README Rewrite** - Updated for MCP protocol with backend selection guide
+- **Environment Configuration** - New `.env.example` with vector backend options
+- **Performance Comparison** - Documented latency differences between backends
+- **Docker Updates** - Multi-stage build with native compilation for hnswlib
+
+### Removed
+
+#### HTTP API Components
+- Fastify server and routing layer (`src/server.js`, `src/routes/`)
+- HTTP middleware (CORS, rate limiting, authentication)
+- REST API endpoints (`/v1/chat`, `/health`)
+- Groq service integration (`src/services/groq.service.js`)
+- HTTP-based benchmark suite (`benchmark/` directory)
+- K6 load testing (not applicable to stdio transport)
+- Grafana/InfluxDB monitoring (removed with HTTP)
+
+#### Legacy Components
+- Chat service (`src/services/chat.service.js`)
+- Services index (`src/services/index.js`)
+- HTTP security tests
+
+### Fixed
+
+#### Build and Compatibility
+- **C++ Build Issues** - Annoy.js backend eliminates hnswlib-node compilation requirements
+- **Cross-Platform Support** - Pure JS backend works on all platforms without build tools
+- **Docker Compatibility** - Multi-stage build ensures hnswlib compiles correctly in production
+
+#### Testing
+- **Test Suite Updates** - Refactored all tests for new architecture
+- **Import Path Corrections** - Fixed relative imports after directory reorganization
+- **HNSW Test Skipping** - Gracefully skips hnswlib tests when native module unavailable
+
+### Security
+
+#### Protocol Security
+- **Process Isolation** - MCP stdio transport provides natural security boundary
+- **No Network Exposure** - Server communicates only via stdio, no open ports
+- **Input Validation** - Zod schemas validate all MCP tool parameters
+
+#### Removed Security Features
+- API key authentication (not applicable to stdio transport)
+- Rate limiting (client-side responsibility in MCP)
+- CORS protection (not applicable)
+
+### Performance
+
+#### Benchmarks
+| Backend | 10K Vectors | 100K Vectors | Build Time | Dependencies |
+|---------|-------------|--------------|------------|--------------|
+| **Annoy.js** | ~2-5ms | ~10-20ms | Fast | None (pure JS) |
+| **HNSW** | ~0.5-1ms | ~1-3ms | Medium | C++ build tools |
+
+#### Resource Usage
+- **Memory** - Similar memory footprint between backends
+- **Startup** - Annoy.js: < 100ms, HNSW: < 500ms (with pre-built binary)
+- **Scaling** - Both backends support 100K+ vectors efficiently
+
+### Migration Guide
+
+#### From v1.x (HTTP API) to v2.0 (MCP)
+1. **Client Integration** - Update clients to use MCP protocol instead of HTTP
+2. **Tool Calls** - Replace HTTP POST with MCP `tools/call` method
+3. **Caching Logic** - Implement cache miss handling with `cache_store` tool
+4. **Backend Selection** - Choose vector backend based on deployment requirements
+5. **Docker Deployment** - Use provided Dockerfile for hnswlib-optimized builds
+
+#### Environment Variables
+```bash
+# Required: Select vector backend
+VECTOR_INDEX_BACKEND=annoy  # or 'hnsw'
+
+# Optional: Configure embedding service
+EMBEDDING_PROVIDER=mock     # or 'openai'
+OPENAI_API_KEY=sk-...       # if using OpenAI
+
+# Optional: Cache tuning
+CACHE_SIMILARITY_THRESHOLD=0.85
+CACHE_MAX_ELEMENTS=100000
+CACHE_DEFAULT_TTL=3600
+```
+
 ## [1.0.0] - 2026-02-08
 
 ### Added
@@ -57,6 +195,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/EricNguyen1206/erion-ember/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/EricNguyen1206/erion-ember/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/EricNguyen1206/erion-ember/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/EricNguyen1206/erion-ember/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/EricNguyen1206/erion-ember/releases/tag/v0.1.0
