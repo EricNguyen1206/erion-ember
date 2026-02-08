@@ -8,10 +8,13 @@
     "dev": "bun run --watch src/mcp-server.js",
     "start": "bun run src/mcp-server.js",
     "test": "bun test tests/",
-    "test:watch": "bun test --watch tests/"
+    "test:watch": "bun test --watch tests/",
+    "docker:build": "docker build -t erion-ember .",
+    "docker:run": "docker run -e VECTOR_INDEX_BACKEND=hnsw erion-ember"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "annoy.js": "^0.0.0",
     "hnswlib-node": "^2.0.0",
     "lz4js": "^0.2.0",
     "xxhash-addon": "^2.0.0",
