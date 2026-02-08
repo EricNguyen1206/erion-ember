@@ -1,53 +1,29 @@
 # 🚀 Erion Ember
 
-LLM Semantic Cache with K6 Benchmarking - Production-ready solution for caching LLM responses with semantic similarity matching.
+LLM Semantic Cache MCP Server - Production-ready semantic caching for AI coding assistants via the Model Context Protocol.
 
 ## Overview
 
-Erion Ember provides a high-performance semantic caching layer for LLM applications, reducing costs and latency by serving cached responses for semantically similar queries.
+Erion Ember provides an MCP server that caches LLM responses using semantic similarity matching. It integrates with AI coding assistants like Claude Code, Opencode, and Codex to reduce API costs and latency.
 
 ## Features
 
+- ✅ **MCP Protocol**: Standardized tool interface for AI assistants
+- ✅ **Semantic Caching**: Intelligent cache with vector similarity matching
+- ✅ **Multi-Provider**: Works with any AI provider (Claude, OpenAI, Groq, etc.)
+- ✅ **Dual Vector Backends**: 
+  - **Annoy.js** (default): Pure JavaScript, works immediately
+  - **HNSW** (optimized): C++ implementation, maximum performance via Docker
+- ✅ **Embedding Generation**: Built-in embedding service (OpenAI or mock)
+- ✅ **Cost Tracking**: Monitor token savings and cost reductions
 - ✅ **Bun Runtime**: Blazing fast JavaScript runtime
-- ✅ **Fastify HTTP API**: High-performance web framework
-- ✅ **Semantic Caching**: Intelligent cache with similarity matching
-- ✅ **K6 Benchmarking**: Professional load testing suite
-- ✅ **Docker Ready**: Containerized deployment with profiles
-- ✅ **Monitoring**: Optional Grafana + InfluxDB integration
-
-## Project Structure
-
-```
-erion-ember/
-├── core/                           # Bun + Fastify HTTP API + Semantic Cache
-│   ├── src/
-│   │   ├── cache/              # Semantic cache implementation
-│   │   ├── routes/            # API endpoints
-│   │   └── server.js          # Fastify server
-│   ├── tests/                 # Unit tests
-│   ├── Dockerfile
-│   └── README.md
-├── benchmark/                      # K6 load testing suite
-│   ├── k6/
-│   │   ├── smoke-test.js      # Quick validation
-│   │   ├── load-test.js       # Normal load
-│   │   ├── stress-test.js     # Breaking point
-│   │   └── soak-test.js      # Memory leak detection
-│   └── grafana/              # Dashboard config
-├── services/
-│   ├── mini-redis-core/       # Redis-compatible server
-│   └── semantic-cache/       # Legacy semantic cache
-├── docker-compose.yml              # Orchestration with profiles
-└── package.json                   # Root workspace
-```
 
 ## Quick Start
 
 ### Prerequisites
 
 - Bun runtime (v1.0+)
-- Docker & Docker Compose v2.20+
-- K6 CLI (optional, for local testing)
+- Docker (optional, for hnswlib optimization)
 
 ### Installation
 
@@ -60,210 +36,317 @@ cd erion-ember
 bun install
 ```
 
-### Running the Services
-
-#### Option 1: Core + Redis only
+### Development (Annoy.js - Works Immediately)
 
 ```bash
-# Start core service and Redis
-docker compose up core redis
-
-# Or with npm script
-npm run docker:core
+# Works immediately, no build tools needed
+bun run dev
 ```
 
-#### Option 2: Core + Benchmark
+The server uses **Annoy.js** by default - a pure JavaScript vector search library that requires no native compilation.
+
+### Production (HNSW - Maximum Performance)
 
 ```bash
-# Start core, redis, and K6 benchmark
-docker compose --profile benchmark up
+# Build Docker image with hnswlib compiled
+bun run docker:build
 
-# Or with npm script
-npm run benchmark
+# Run with hnswlib backend
+bun run docker:run
 ```
 
-#### Option 3: Full Stack (with Monitoring)
+## Vector Index Backends
 
+### Annoy.js (Default)
+
+- ✅ **Zero dependencies** - Pure JavaScript
+- ✅ **Immediate startup** - No build tools needed
+- ✅ **Cross-platform** - Works everywhere
+- ⚡ **Performance**: ~1-5ms search for 10K vectors
+- 📦 **Best for**: Development, testing, smaller caches
+
+### HNSW (Optimized)
+
+- 🚀 **Maximum performance** - State-of-the-art C++ implementation
+- 📈 **Scales to millions** - Efficient for large vector sets
+- 🐳 **Docker recommended** - Pre-built with all dependencies
+- ⚡ **Performance**: ~0.1-1ms search for 100K+ vectors
+- 📦 **Best for**: Production, large-scale deployments
+
+### Selecting Backend
+
+Via environment variable:
 ```bash
-# Start all services including Grafana + InfluxDB
-docker compose --profile benchmark --profile monitoring up
+# Annoy.js (default, pure JS)
+VECTOR_INDEX_BACKEND=annoy bun run dev
+
+# HNSW (C++, requires build tools or Docker)
+VECTOR_INDEX_BACKEND=hnsw bun run dev
 ```
 
-### Local Development
+## Usage with MCP Clients
 
-```bash
-# Development mode with hot reload
-npm run dev
+### Claude Code
 
-# Run tests
-npm test
+Add to Claude Code configuration:
 
-# Build
-npm run build
-```
-
-## API Documentation
-
-### POST /v1/chat
-
-Chat with semantic caching.
-
-**Request:**
 ```json
 {
-  "prompt": "What is machine learning?",
-  "model": "llama3.2"
+  "mcpServers": {
+    "erion-ember": {
+      "command": "bun",
+      "args": ["run", "/path/to/erion-ember/src/mcp-server.js"],
+      "env": {
+        "EMBEDDING_PROVIDER": "mock"
+      }
+    }
+  }
 }
 ```
 
-**Response (cached):**
+### Opencode
+
+Add to `.opencode/config.json`:
+
 ```json
 {
-  "response": "Machine learning is a subset of AI...",
+  "mcpServers": [
+    {
+      "name": "erion-ember",
+      "command": "bun run /path/to/erion-ember/src/mcp-server.js",
+      "env": {
+        "EMBEDDING_PROVIDER": "mock"
+      }
+    }
+  ]
+}
+```
+
+## Available Tools
+
+### `ai_complete`
+
+Check cache for a prompt and return cached response or indicate cache miss.
+
+**Parameters:**
+- `prompt` (string, required): The prompt to complete
+- `embedding` (number[], optional): Pre-computed embedding vector
+- `metadata` (object, optional): Additional metadata to store
+- `similarityThreshold` (number, optional): Override similarity threshold (0-1)
+
+**Response (cache hit):**
+```json
+{
   "cached": true,
-  "similarity": 1.0,
-  "model": "llama3.2",
-  "timestamp": "2026-01-31T22:00:00.000Z"
+  "response": "Cached response text...",
+  "similarity": 0.95,
+  "isExactMatch": false,
+  "cachedAt": "2026-02-08T10:30:00.000Z"
 }
 ```
 
-**Response (not cached):**
+**Response (cache miss):**
 ```json
 {
-  "response": "Generated response for: What is machine learning?",
   "cached": false,
-  "model": "llama3.2",
-  "timestamp": "2026-01-31T22:00:00.000Z"
+  "message": "Cache miss. Please call your AI provider..."
 }
 ```
 
-### GET /health
+### `cache_store`
 
-Health check endpoint.
+Store a prompt/response pair in the cache.
+
+**Parameters:**
+- `prompt` (string, required): The prompt to cache
+- `response` (string, required): The AI response
+- `embedding` (number[], optional): Pre-computed embedding
+- `metadata` (object, optional): Additional metadata
+- `ttl` (number, optional): Time-to-live in seconds
+
+### `cache_check`
+
+Check if a prompt exists in cache without storing.
+
+**Parameters:**
+- `prompt` (string, required): The prompt to check
+- `embedding` (number[], optional): Pre-computed embedding
+- `similarityThreshold` (number, optional): Override similarity threshold
+
+### `generate_embedding`
+
+Generate embedding vector for text.
+
+**Parameters:**
+- `text` (string, required): Text to embed
+- `model` (string, optional): Embedding model to use
 
 **Response:**
 ```json
 {
-  "status": "ok",
-  "timestamp": "2026-01-31T22:00:00.000Z"
+  "embedding": [0.1, 0.2, ...],
+  "model": "mock-embedding-model",
+  "dimension": 1536
 }
 ```
 
-## Benchmarking
+### `cache_stats`
 
-### Quick Benchmark
+Get cache statistics.
 
-```bash
-# Run smoke test locally
-npm run benchmark:local
-
-# Or with K6 directly
-cd benchmark
-k6 run k6/smoke-test.js
+**Response:**
+```json
+{
+  "totalEntries": 100,
+  "memoryUsage": { "vectors": 153600, "metadata": 10240 },
+  "compressionRatio": "0.45",
+  "cacheHits": 250,
+  "cacheMisses": 50,
+  "hitRate": "0.8333",
+  "totalQueries": 300,
+  "savedTokens": 15000,
+  "savedUsd": 0.45
+}
 ```
 
-### Test Types
+## Workflow Example
 
-| Test | Virtual Users | Duration | Purpose |
-|------|--------------|----------|---------|
-| **smoke-test.js** | 10 VU | 30s | Quick validation |
-| **load-test.js** | 200 VU | 16m | Normal load testing |
-| **stress-test.js** | 500 VU | 12m | Find breaking point |
-| **soak-test.js** | 50 VU | 70m | Memory leak detection |
+```javascript
+// 1. Check cache first
+const result = await mcpClient.callTool('ai_complete', {
+  prompt: 'Explain quantum computing'
+});
 
-### Metrics Collected
+if (result.cached) {
+  // Use cached response
+  return result.response;
+}
 
-- **Throughput**: Requests per second (RPS)
-- **Latency**: p50, p95, p99 percentiles
-- **Cache Hit Rate**: Percentage of cache hits
-- **Token Savings**: Estimated tokens saved
-- **Error Rate**: Percentage of failed requests
+// 2. Cache miss - call your AI provider
+const aiResponse = await callClaudeAPI('Explain quantum computing');
 
-### Dashboard
+// 3. Store in cache for future use
+await mcpClient.callTool('cache_store', {
+  prompt: 'Explain quantum computing',
+  response: aiResponse
+});
 
-Access Grafana dashboard at http://localhost:3001 (when using --profile monitoring)
-
-**Default credentials:**
-- Username: `admin`
-- Password: `admin`
-
-## Docker Compose Profiles
-
-```bash
-# Core services only
-docker compose up core redis
-
-# With benchmark
-docker compose --profile benchmark up
-
-# With monitoring
-docker compose --profile monitoring up
-
-# Full stack
-docker compose --profile benchmark --profile monitoring up
-
-# Legacy Mini-Redis
-docker compose --profile legacy up
+return aiResponse;
 ```
-
-## Mini-Redis (Legacy)
-
-The project also includes a Redis-compatible server implementation.
-
-```bash
-# Start Mini-Redis with RedisInsight
-docker compose --profile legacy --profile insight up
-
-# Run MemTier benchmark
-docker compose --profile benchmark up
-
-# Access RedisInsight
-open http://localhost:8080
-```
-
-For detailed Mini-Redis documentation, see [services/mini-redis-core/README.md](services/mini-redis-core/README.md).
 
 ## Development
 
-### Project Workspaces
+```bash
+# Run in development mode (Annoy.js backend)
+bun run dev
 
-This project uses npm workspaces:
+# Run tests
+bun test
 
-```json
-{
-  "workspaces": ["core", "benchmark"]
-}
+# Run specific test file
+bun test tests/vector-index/annoy-index.test.js
+
+# Build Docker image
+bun run docker:build
+
+# Run Docker container with hnswlib
+bun run docker:run
 ```
 
-### Adding New Features
+## Testing
 
-1. **Core Service**: Add endpoints in `core/src/routes/`
-2. **Benchmark**: Add test scenarios in `benchmark/k6/`
-3. **Tests**: Write unit tests in `core/tests/`
+The project includes comprehensive tests:
 
-### Testing
+- **Unit tests**: Individual components (SemanticCache, EmbeddingService)
+- **Integration tests**: Full MCP protocol workflow
+- **Vector index tests**: Both Annoy.js and HNSW implementations
 
 ```bash
 # Run all tests
 bun test
 
+# Run vector index tests only
+bun test tests/vector-index/
+
 # Run with coverage
 bun test --coverage
 ```
 
+## Project Structure
+
+```
+erion-ember/
+├── src/
+│   ├── mcp-server.js          # MCP server entry point
+│   ├── lib/                   # Core caching logic
+│   │   ├── semantic-cache.js
+│   │   ├── vector-index/      # Pluggable vector search
+│   │   │   ├── interface.js   # Abstract interface
+│   │   │   ├── index.js       # Factory
+│   │   │   ├── annoy-index.js # Pure JS implementation
+│   │   │   └── hnsw-index.js  # C++ implementation
+│   │   ├── hnsw-index.js
+│   │   ├── quantizer.js
+│   │   ├── compressor.js
+│   │   ├── normalizer.js
+│   │   └── metadata-store.js
+│   ├── services/
+│   │   └── embedding-service.js
+│   └── tools/                 # MCP tool handlers
+│       ├── ai-complete.js
+│       ├── cache-check.js
+│       ├── cache-store.js
+│       ├── cache-stats.js
+│       └── generate-embedding.js
+├── tests/
+│   ├── lib/                   # Core library tests
+│   ├── services/              # Service tests
+│   ├── vector-index/          # Vector index tests
+│   └── mcp-server.test.js     # Server protocol tests
+├── Dockerfile                 # Multi-stage build with hnswlib
+├── .env.example               # Environment configuration
+└── package.json
+```
+
 ## Environment Variables
 
-### Core Service
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VECTOR_INDEX_BACKEND` | Vector search backend: `annoy` or `hnsw` | `annoy` |
+| `EMBEDDING_PROVIDER` | Embedding provider: `mock` or `openai` | `mock` |
+| `OPENAI_API_KEY` | OpenAI API key (if provider=openai) | - |
+| `CACHE_SIMILARITY_THRESHOLD` | Minimum similarity for cache hits | `0.85` |
+| `CACHE_MAX_ELEMENTS` | Maximum cache entries | `100000` |
+| `CACHE_DEFAULT_TTL` | Default TTL in seconds | `3600` |
+| `NODE_ENV` | Environment mode | `development` |
 
-- `PORT`: Server port (default: 3000)
-- `REDIS_URL`: Redis connection URL
-- `OLLAMA_URL`: Ollama API URL (default: `http://host.docker.internal:11434`)
-- `NODE_ENV`: Environment (development/production)
+## Performance Comparison
 
-### Benchmark
+| Backend | Search Time (10K vectors) | Search Time (100K vectors) | Build Time | Dependencies |
+|---------|---------------------------|----------------------------|------------|--------------|
+| **Annoy.js** | ~2-5ms | ~10-20ms | Fast | None (pure JS) |
+| **HNSW** | ~0.5-1ms | ~1-3ms | Medium | C++ build tools |
 
-- `CORE_URL`: HTTP endpoint for core (default: `http://localhost:3000`)
-- `K6_OUT`: Output format (default: `json`)
+## Troubleshooting
+
+### C++ Build Errors (hnswlib)
+
+If you encounter C++ build errors with hnswlib:
+
+```bash
+# Option 1: Use Annoy.js (recommended for development)
+VECTOR_INDEX_BACKEND=annoy bun run dev
+
+# Option 2: Use Docker
+bun run docker:build
+bun run docker:run
+```
+
+### MCP Connection Issues
+
+- Ensure the server is outputting valid JSON-RPC to stdout
+- Check stderr for error messages
+- Verify environment variables are set correctly
 
 ## Contributing
 
@@ -276,6 +359,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Built with [Bun](https://bun.sh/)
-- Powered by [Fastify](https://fastify.io/)
-- Benchmarked with [K6](https://k6.io/)
-- Monitored with [Grafana](https://grafana.com/)
+- Vector search: [Annoy.js](https://github.com/DanielKRing1/Annoy.js) (pure JS) and [hnswlib-node](https://github.com/yahoojapan/hnswlib-node) (C++)
+- MCP Protocol: [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol)
+- Protocol: [Model Context Protocol](https://modelcontextprotocol.io/)
