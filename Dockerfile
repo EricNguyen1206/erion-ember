@@ -1,25 +1,40 @@
-FROM oven/bun:latest
+# Build stage for native dependencies
+FROM node:20-alpine AS builder
+
+# Install build dependencies for hnswlib-node
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    clang \
+    linux-headers
 
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock* ./
 
-# Install python3 and build tools for native modules (hnswlib-node)
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# Install dependencies (including native modules)
+RUN npm install
 
-# Install dependencies
-RUN bun install
+# Production stage
+FROM oven/bun:latest
 
-# Copy source code
-COPY . .
+WORKDIR /app
 
-# Expose port
-EXPOSE 3000
+# Copy node_modules from builder (includes compiled hnswlib)
+COPY --from=builder /app/node_modules ./node_modules
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+# Copy application code
+COPY src/ ./src/
+COPY package.json ./
 
-# Start server
-CMD ["bun", "run", "start"]
+# Set environment to use hnswlib
+ENV VECTOR_INDEX_BACKEND=hnsw
+ENV NODE_ENV=production
+
+# MCP server uses stdio transport, no ports needed
+# Health check removed - stdio transport doesn't use HTTP
+
+# Start MCP server
+CMD ["bun", "run", "src/mcp-server.js"]
