@@ -1,4 +1,4 @@
-import Quantizer from '../src/lib/quantizer.js';
+import Quantizer from '../lib/quantizer.js';
 
 describe('Quantizer', () => {
   let quantizer;

@@ -1,4 +1,4 @@
-import MetadataStore from '../src/lib/metadata-store.js';
+import MetadataStore from '../lib/metadata-store.js';
 
 describe('MetadataStore', () => {
   let store;

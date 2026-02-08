@@ -1,4 +1,4 @@
-import HNSWIndex from '../src/lib/hnsw-index.js';
+import HNSWIndex from '../lib/hnsw-index.js';
 
 describe('HNSWIndex', () => {
   let index;

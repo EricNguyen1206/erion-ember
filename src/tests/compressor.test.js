@@ -1,4 +1,4 @@
-import Compressor from '../src/lib/compressor.js';
+import Compressor from '../lib/compressor.js';
 
 describe('Compressor', () => {
   let compressor;

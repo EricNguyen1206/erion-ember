@@ -1,4 +1,4 @@
-import Normalizer from '../src/lib/normalizer.js';
+import Normalizer from '../lib/normalizer.js';
 
 describe('Normalizer', () => {
   let normalizer;

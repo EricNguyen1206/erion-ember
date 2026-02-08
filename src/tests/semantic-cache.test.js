@@ -1,4 +1,4 @@
-import SemanticCache from '../src/lib/semantic-cache.js';
+import SemanticCache from '../lib/semantic-cache.js';
 
 describe('SemanticCache', () => {
   let cache;
