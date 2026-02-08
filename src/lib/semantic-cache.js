@@ -109,27 +109,47 @@ class SemanticCache {
     
     // Search similar vectors
     const quantizedQuery = this.quantizer.quantize(embedding);
-    const searchResults = this.index.search(quantizedQuery, 5);
-    
+    const baseK = 5;
+    const maxK = Math.min(this.maxElements, 50);
+    let k = Math.min(baseK, this.maxElements);
+    const inspected = new Set();
+
     // Find best match above threshold
-    for (const result of searchResults) {
-      // Convert distance to similarity (cosine distance -> similarity)
-      const similarity = 1 - result.distance;
-      
-      if (similarity >= minSimilarity) {
-        const metadata = this.metadataStore.get(result.id.toString());
-        if (metadata) {
-          this._statistics.hits++;
-          const response = this._decompressResponse(metadata);
-          return {
-            response,
-            similarity,
-            isExactMatch: false,
-            cachedAt: new Date(metadata.createdAt),
-            metadata
-          };
+    while (k > 0) {
+      const searchResults = this.index.search(quantizedQuery, k);
+      let staleCandidate = false;
+
+      for (const result of searchResults) {
+        if (inspected.has(result.id)) {
+          continue;
+        }
+        inspected.add(result.id);
+
+        // Convert distance to similarity (cosine distance -> similarity)
+        const similarity = 1 - result.distance;
+
+        if (similarity >= minSimilarity) {
+          const metadata = this.metadataStore.get(result.id.toString());
+          if (metadata) {
+            this._statistics.hits++;
+            const response = this._decompressResponse(metadata);
+            return {
+              response,
+              similarity,
+              isExactMatch: false,
+              cachedAt: new Date(metadata.createdAt),
+              metadata
+            };
+          }
+          staleCandidate = true;
         }
       }
+
+      if (!staleCandidate || k >= maxK || searchResults.length < k) {
+        break;
+      }
+
+      k = Math.min(maxK, k + baseK);
     }
     
     this._statistics.misses++;
@@ -279,8 +299,22 @@ class SemanticCache {
     
     // Restore metadata store
     this.metadataStore.clear();
+    const now = Date.now();
     for (const [id, data] of metadata.store) {
-      this.metadataStore.set(id, data);
+      if (data.expiresAt && data.expiresAt <= now) {
+        continue;
+      }
+
+      let ttl;
+      if (data.expiresAt) {
+        const remainingMs = data.expiresAt - now;
+        if (remainingMs <= 0) {
+          continue;
+        }
+        ttl = Math.ceil(remainingMs / 1000);
+      }
+
+      this.metadataStore.set(id, data, ttl);
     }
     
     // Restore stats

@@ -9,13 +9,12 @@ Erion Ember is a high-performance semantic caching layer for LLM applications. I
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        C[Client Application]
+        C[MCP Client]
     end
     
-    subgraph "API Layer"
-        F[Fastify Server]
-        RL[Rate Limiter]
-        AK[API Key Auth]
+    subgraph "MCP Server"
+        MCP[Stdio MCP Server]
+        TOOLS[Tool Handlers]
         V[Zod Validator]
     end
     
@@ -24,56 +23,47 @@ graph TB
         N[Normalizer]
         Q[Quantizer]
         COMP[Compressor]
-        HNSW[HNSWIndex]
+        VI[VectorIndex (Annoy/HNSW)]
         MS[MetadataStore]
+        ES[EmbeddingService]
     end
     
     subgraph "External Services"
-        GROQ[Groq API]
-        REDIS[(Redis)]
+        EMB[Embedding API (OpenAI)]
     end
     
-    C --> F
-    F --> RL --> AK --> V
+    C --> MCP
+    MCP --> TOOLS --> V
     V --> SC
+    TOOLS --> ES
+    ES -.-> EMB
     SC --> N
     SC --> Q
     SC --> COMP
-    SC --> HNSW
+    SC --> VI
     SC --> MS
-    SC -.-> GROQ
-    MS -.-> REDIS
 ```
 
 ## Component Architecture
 
-### 1. API Layer
+### 1. MCP Server Layer
 
 ```mermaid
 graph LR
-    subgraph "Fastify Server"
-        R[Routes] --> M[Middleware]
-        M --> H[Handlers]
+    subgraph "MCP Server"
+        R[Tool Router] --> H[Tool Handlers]
+        H --> V[Zod Validation]
     end
-    
-    subgraph "Middleware Stack"
-        CORS[CORS]
-        RL[Rate Limit]
-        AUTH[API Auth]
-        VAL[Validation]
-    end
-    
-    M --> CORS --> RL --> AUTH --> VAL
 ```
 
 #### Components
 
 | Component | File | Description |
 |-----------|------|-------------|
-| **Server** | `src/server.js` | Fastify server initialization and plugin registration |
-| **Chat Route** | `src/routes/chat.js` | Main chat endpoint with caching logic |
-| **Rate Limiter** | `@fastify/rate-limit` | 60 requests/minute per IP |
-| **CORS** | `@fastify/cors` | Cross-origin resource sharing |
+| **MCP Server** | `src/mcp-server.js` | MCP server entry point and tool registration |
+| **Tool Handlers** | `src/tools/*.js` | `ai_complete`, `cache_check`, `cache_store`, `cache_stats`, `generate_embedding` |
+| **MCP SDK** | `@modelcontextprotocol/sdk` | Protocol handling and transport |
+| **Zod Validation** | `zod` | Tool input validation |
 
 ### 2. Core Layer - SemanticCache
 
@@ -103,13 +93,21 @@ graph TB
 | Component | File | Purpose |
 |-----------|------|---------|
 | **SemanticCache** | `src/lib/semantic-cache.js` | Main cache orchestrator |
-| **HNSWIndex** | `src/lib/hnsw-index.js` | Fast approximate nearest neighbor search |
+| **VectorIndex Interface** | `src/lib/vector-index/interface.js` | Shared vector index contract |
+| **VectorIndex Factory** | `src/lib/vector-index/index.js` | Backend selection (`annoy` or `hnsw`) |
+| **AnnoyVectorIndex** | `src/lib/vector-index/annoy-index.js` | Pure JS approximate nearest neighbor search |
+| **HNSWVectorIndex** | `src/lib/vector-index/hnsw-index.js` | C++ HNSW approximate nearest neighbor search |
 | **Quantizer** | `src/lib/quantizer.js` | INT8 vector quantization |
 | **Compressor** | `src/lib/compressor.js` | LZ4 text compression |
 | **Normalizer** | `src/lib/normalizer.js` | Text normalization and hashing |
 | **MetadataStore** | `src/lib/metadata-store.js` | TTL-based metadata storage |
 
-### 3. HNSW Index
+### 3. Vector Index Backends
+
+Erion Ember supports two vector index backends:
+
+- **Annoy.js**: Pure JavaScript, no native dependencies
+- **HNSW**: C++ HNSW implementation via `hnswlib-node`
 
 HNSW (Hierarchical Navigable Small World) provides O(log n) approximate nearest neighbor search.
 
@@ -140,37 +138,32 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant C as Client
-    participant F as Fastify
+    participant C as MCP Client
+    participant S as MCP Server
     participant SC as SemanticCache
     participant N as Normalizer
     participant MS as MetadataStore
-    participant H as HNSWIndex
-    participant G as Groq API
+    participant V as VectorIndex
     
-    C->>F: POST /v1/chat
-    F->>SC: get(prompt, embedding)
+    C->>S: tool call (ai_complete)
+    S->>SC: get(prompt, embedding)
     SC->>N: normalize(prompt)
     SC->>MS: findByPromptHash(hash)
     
     alt Exact Match Found
         MS-->>SC: metadata
-        SC-->>F: {cached: true, similarity: 1.0}
+        SC-->>S: {cached: true, similarity: 1.0}
     else No Exact Match
-        SC->>H: search(embedding, k=5)
-        H-->>SC: similar vectors
+        SC->>V: search(embedding, k=5)
+        V-->>SC: similar vectors
         alt Similar Match Found
-            SC-->>F: {cached: true, similarity: 0.92}
+            SC-->>S: {cached: true, similarity: 0.92}
         else No Match
-            SC->>G: chat/completions
-            G-->>SC: response
-            SC->>MS: set(metadata)
-            SC->>H: addItem(vector)
-            SC-->>F: {cached: false}
+            SC-->>S: {cached: false}
         end
     end
     
-    F-->>C: Response JSON
+    S-->>C: Tool response
 ```
 
 #### Cache Write Flow
@@ -181,7 +174,7 @@ sequenceDiagram
     participant N as Normalizer
     participant C as Compressor
     participant Q as Quantizer
-    participant H as HNSWIndex
+    participant V as VectorIndex
     participant MS as MetadataStore
     
     SC->>N: normalize(prompt)
@@ -189,8 +182,8 @@ sequenceDiagram
     SC->>C: compress(prompt)
     SC->>C: compress(response)
     SC->>Q: quantize(embedding)
-    SC->>H: addItem(quantizedVector)
-    H-->>SC: vectorId
+    SC->>V: addItem(quantizedVector)
+    V-->>SC: vectorId
     SC->>MS: set(id, metadata, ttl)
 ```
 
@@ -200,7 +193,7 @@ sequenceDiagram
 graph TB
     subgraph "Memory Layout"
         subgraph "Vector Storage"
-            VS[HNSW Index]
+            VS[Vector Index (Annoy/HNSW)]
             VD[INT8 Vectors]
         end
         
@@ -254,7 +247,7 @@ graph TB
 
 | Service | Image | Port | Health Check |
 |---------|-------|------|--------------|
-| erion-ember | Custom Bun | 3000 | GET /health |
+| erion-ember | Custom Bun | - | Process health / exit code |
 | redis | redis:7-alpine | 6379 | redis-cli ping |
 | k6 | grafana/k6 | - | - |
 | influxdb | influxdb:2.7 | 8086 | - |
@@ -262,39 +255,33 @@ graph TB
 
 ## API Architecture
 
-### Endpoints
+### MCP Tools
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ Erion Ember API v1                                       │
-├─────────────────────────────────────────────────────────┤
-│ POST /v1/chat        │ Chat with semantic caching        │
-│ GET  /health         │ Health check                      │
-│ GET  /v1/stats       │ Cache statistics                  │
-└─────────────────────────────────────────────────────────┘
-```
+| Tool | Purpose |
+|------|---------|
+| `ai_complete` | Cache lookup and response (hit or miss) |
+| `cache_check` | Cache lookup without storing |
+| `cache_store` | Store prompt/response pair |
+| `cache_stats` | Cache metrics and savings |
+| `generate_embedding` | Generate embedding vector |
 
 ### Request/Response Schema
 
 ```typescript
-// POST /v1/chat Request
-interface ChatRequest {
-  prompt: string;      // Required, min 1 char
-  model?: string;      // Default: "openai/gpt-oss-120b"
+// ai_complete Request
+interface AiCompleteRequest {
+  prompt: string;                 // Required, min 1 char
+  embedding?: number[];           // Optional pre-computed embedding
+  similarityThreshold?: number;   // Optional override (0-1)
 }
 
-// POST /v1/chat Response
-interface ChatResponse {
-  response: string;
+// ai_complete Response (embedded in MCP tool response)
+interface AiCompleteResponse {
   cached: boolean;
-  similarity?: number; // Only if cached
-  model: string;
-  timestamp: string;   // ISO 8601
-  metadata?: object;   // Only if cached
-  savings: {
-    tokens_saved: number;
-    usd_saved: number;
-  };
+  response?: string;
+  similarity?: number;            // Only if cached
+  isExactMatch?: boolean;         // Only if cached
+  cachedAt?: string;              // ISO 8601
 }
 ```
 
@@ -303,23 +290,21 @@ interface ChatResponse {
 ```mermaid
 graph LR
     subgraph "Security Layers"
-        RL[Rate Limiting] --> AK[API Key Auth]
-        AK --> IV[Input Validation]
+        ISO[Process Isolation] --> IV[Input Validation]
         IV --> SE[Safe Errors]
     end
     
-    R[Request] --> RL
-    SE --> RS[Response]
+    R[Tool Call] --> ISO
+    SE --> RS[Tool Response]
 ```
 
 ### Security Features
 
 | Feature | Implementation | Configuration |
 |---------|---------------|---------------|
-| Rate Limiting | @fastify/rate-limit | 60 req/min per IP |
-| API Key Auth | Custom middleware | Optional `x-api-key` header |
-| Input Validation | Zod schemas | All endpoints |
-| Error Sanitization | Custom handler | Production only |
+| Process Isolation | OS process + stdio transport | Run MCP server as separate process |
+| Input Validation | Zod schemas | All tools |
+| Error Sanitization | Tool handlers | Return safe errors |
 
 ## Performance Characteristics
 
@@ -347,11 +332,12 @@ graph TB
         BUN[Bun v1.0+]
     end
     
-    subgraph "Framework"
-        FAST[Fastify v4]
+    subgraph "Protocol"
+        MCP[@modelcontextprotocol/sdk]
     end
     
     subgraph "Core Libraries"
+        ANNOY[annoy.js]
         HNSW[hnswlib-node]
         LZ4[lz4js]
         XX[xxhash-addon]
@@ -364,11 +350,12 @@ graph TB
         K6[K6]
     end
     
-    BUN --> FAST
-    FAST --> HNSW
-    FAST --> LZ4
-    FAST --> XX
-    FAST --> ZOD
+    BUN --> MCP
+    MCP --> ANNOY
+    MCP --> HNSW
+    MCP --> LZ4
+    MCP --> XX
+    MCP --> ZOD
 ```
 
 ## Future Considerations

@@ -13,20 +13,23 @@ export class EmbeddingService {
   /**
    * Generate embedding for text
    * @param {string} text - Text to embed
+   * @param {string|null} modelOverride - Optional model override
    * @returns {Promise<{embedding: number[], model: string}|null>} Embedding result or null
    */
-  async generate(text) {
+  async generate(text, modelOverride = null) {
     if (!this.isConfigured()) {
       return null;
     }
 
+    const model = modelOverride || this.model;
+
     if (this.provider === 'mock') {
       // Generate deterministic mock embedding based on text hash
-      return this._generateMockEmbedding(text);
+      return this._generateMockEmbedding(text, modelOverride);
     }
 
     if (this.provider === 'openai') {
-      return this._generateOpenAIEmbedding(text);
+      return this._generateOpenAIEmbedding(text, model);
     }
 
     return null;
@@ -47,7 +50,7 @@ export class EmbeddingService {
    * Generate deterministic mock embedding
    * @private
    */
-  _generateMockEmbedding(text) {
+  _generateMockEmbedding(text, modelOverride = null) {
     // Create a deterministic embedding based on text content
     // This ensures same text = same embedding for testing
     const embedding = new Array(this.dimension);
@@ -69,7 +72,7 @@ export class EmbeddingService {
     
     return {
       embedding: normalized,
-      model: 'mock-embedding-model'
+      model: modelOverride || 'mock-embedding-model'
     };
   }
 
@@ -77,8 +80,9 @@ export class EmbeddingService {
    * Generate embedding using OpenAI API
    * @private
    */
-  async _generateOpenAIEmbedding(text) {
+  async _generateOpenAIEmbedding(text, modelOverride = null) {
     try {
+      const model = modelOverride || this.model;
       const response = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
         headers: {
@@ -86,7 +90,7 @@ export class EmbeddingService {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: this.model,
+          model,
           input: text
         })
       });
@@ -101,7 +105,7 @@ export class EmbeddingService {
       
       return {
         embedding: data.data[0].embedding,
-        model: this.model
+        model
       };
     } catch (err) {
       console.error('Failed to generate embedding:', err.message);

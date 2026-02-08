@@ -92,7 +92,7 @@ EMBEDDING_PROVIDER=mock
 # Cache config (unchanged)
 CACHE_SIMILARITY_THRESHOLD=0.85
 CACHE_MAX_ELEMENTS=100000
-CACHE_DEFAULT_TTL=3600
+CACHE_DEFAULT_TTL=3600  # Entries expire after TTL (preserved across save/load)
 
 # Server
 NODE_ENV=production

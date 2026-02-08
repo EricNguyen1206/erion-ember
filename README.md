@@ -162,7 +162,7 @@ Store a prompt/response pair in the cache.
 - `response` (string, required): The AI response
 - `embedding` (number[], optional): Pre-computed embedding
 - `metadata` (object, optional): Additional metadata
-- `ttl` (number, optional): Time-to-live in seconds
+- `ttl` (number, optional): Time-to-live in seconds (preserved across cache save/load)
 
 ### `cache_check`
 
@@ -179,7 +179,7 @@ Generate embedding vector for text.
 
 **Parameters:**
 - `text` (string, required): Text to embed
-- `model` (string, optional): Embedding model to use
+- `model` (string, optional): Embedding model to use (OpenAI only; mock echoes label)
 
 **Response:**
 ```json
@@ -285,7 +285,6 @@ erion-ember/
 │   │   │   ├── index.js       # Factory
 │   │   │   ├── annoy-index.js # Pure JS implementation
 │   │   │   └── hnsw-index.js  # C++ implementation
-│   │   ├── hnsw-index.js
 │   │   ├── quantizer.js
 │   │   ├── compressor.js
 │   │   ├── normalizer.js

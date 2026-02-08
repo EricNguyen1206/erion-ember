@@ -1,21 +1,30 @@
-name: Core Tests
+name: MCP Core Tests
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'src/**'
+      - 'tests/**'
       - 'package.json'
+      - 'bun.lock'
       - 'Dockerfile'
+      - '.github/workflows/core-tests.yml'
   pull_request:
     paths:
       - 'src/**'
+      - 'tests/**'
       - 'package.json'
+      - 'bun.lock'
       - 'Dockerfile'
+      - '.github/workflows/core-tests.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      VECTOR_INDEX_BACKEND: annoy
     
     steps:
     - name: Checkout code

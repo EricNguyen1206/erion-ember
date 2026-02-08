@@ -19,6 +19,13 @@ describe('EmbeddingService', () => {
     expect(result.embedding.length).toBe(1536);
   });
 
+  test('should honor model override', async () => {
+    const result = await service.generate('Hello world', 'test-model');
+    
+    expect(result).toBeDefined();
+    expect(result.model).toBe('test-model');
+  });
+
   test('should return null when provider not configured', async () => {
     const unconfiguredService = new EmbeddingService({
       provider: 'openai',
