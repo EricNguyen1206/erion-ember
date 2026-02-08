@@ -57,6 +57,7 @@ class SemanticCache {
     if (!this.index) {
       await this.indexPromise;
     }
+  }
 
   /**
    * Track savings from a cache hit
