@@ -1,13 +1,13 @@
 import hnswlib from 'hnswlib-node';
+import VectorIndex from './interface.js';
 
 /**
- * HNSW Index Wrapper - C++ vector search with Node.js bindings
+ * HNSWVectorIndex - C++ HNSW implementation
+ * Requires hnswlib-node native bindings (use Docker for easiest setup)
  */
-class HNSWIndex {
+class HNSWVectorIndex extends VectorIndex {
   constructor(dim, maxElements, space = 'cosine') {
-    this.dim = dim;
-    this.maxElements = maxElements;
-    this.space = space;
+    super(dim, maxElements, space);
     this.currentId = 0;
     
     // HNSW parameters
@@ -44,14 +44,9 @@ class HNSWIndex {
    * Search for nearest neighbors
    * @param {number[]} queryVector - Query vector
    * @param {number} k - Number of results
-   * @param {number} ef - Search accuracy (optional)
    * @returns {Array<{id: number, distance: number}>} Search results
    */
-  search(queryVector, k = 5, ef = null) {
-    if (ef !== null) {
-      this.index.setEf(ef);
-    }
-    
+  search(queryVector, k = 5) {
     const result = this.index.searchKnn(queryVector, k);
     
     // Convert to array of objects
@@ -62,14 +57,6 @@ class HNSWIndex {
       id,
       distance: distances[i]
     }));
-  }
-
-  /**
-   * Get number of items in index
-   * @returns {number}
-   */
-  getCount() {
-    return this.currentId;
   }
 
   /**
@@ -96,9 +83,16 @@ class HNSWIndex {
    * Destroy index and free memory
    */
   destroy() {
-    // hnswlib-node handles cleanup automatically
     this.index = null;
+  }
+
+  /**
+   * Get number of items in index
+   * @returns {number}
+   */
+  getCount() {
+    return this.currentId;
   }
 }
 
-export default HNSWIndex;
+export default HNSWVectorIndex;

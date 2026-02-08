@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import HNSWIndex from './hnsw-index.js';
+import { createVectorIndex } from './vector-index/index.js';
 import Quantizer from './quantizer.js';
 import Compressor from './compressor.js';
 import Normalizer from './normalizer.js';
@@ -17,7 +17,6 @@ class SemanticCache {
     this.defaultTTL = options.defaultTTL || 3600; // Default TTL: 1 hour (seconds)
     
     // Initialize components
-    this.index = new HNSWIndex(this.dim, this.maxElements, 'cosine');
     this.quantizer = new Quantizer('int8');
     this.compressor = new Compressor();
     this.normalizer = new Normalizer();
@@ -31,7 +30,33 @@ class SemanticCache {
       savedTokens: 0,
       savedUsd: 0
     };
+    
+    // Initialize vector index asynchronously
+    this.index = null;
+    this.indexPromise = this._initIndex();
   }
+
+  /**
+   * Initialize vector index asynchronously
+   * @private
+   */
+  async _initIndex() {
+    this.index = await createVectorIndex({
+      dim: this.dim,
+      maxElements: this.maxElements,
+      space: 'cosine'
+    });
+    return this.index;
+  }
+
+  /**
+   * Ensure index is initialized
+   * @private
+   */
+  async _ensureIndex() {
+    if (!this.index) {
+      await this.indexPromise;
+    }
 
   /**
    * Track savings from a cache hit
@@ -51,6 +76,9 @@ class SemanticCache {
    * @returns {Promise<object|null>} Cache result or null
    */
   async get(prompt, embedding = null, options = {}) {
+    // Ensure index is initialized
+    await this._ensureIndex();
+    
     this._statistics.totalQueries++;
     const minSimilarity = options.minSimilarity || this.similarityThreshold;
     
@@ -115,6 +143,9 @@ class SemanticCache {
    * @param {object} options - Cache options (e.g., ttl)
    */
   async set(prompt, response, embedding, options = {}) {
+    // Ensure index is initialized
+    await this._ensureIndex();
+    
     // Normalize and hash prompt
     const normalized = this.normalizer.normalize(prompt);
     const promptHash = this.normalizer.hash(prompt);
@@ -196,9 +227,13 @@ class SemanticCache {
   /**
    * Clear all cache entries
    */
-  clear() {
+  async clear() {
     this.metadataStore.clear();
-    this.index = new HNSWIndex(this.dim, this.maxElements, 'cosine');
+    this.index = await createVectorIndex({
+      dim: this.dim,
+      maxElements: this.maxElements,
+      space: 'cosine'
+    });
     this._statistics = { hits: 0, misses: 0, totalQueries: 0, savedTokens: 0, savedUsd: 0 };
   }
 
@@ -207,7 +242,10 @@ class SemanticCache {
    * @param {string} path - Directory path
    */
   async save(path) {
-    // Save HNSW index
+    // Ensure index is initialized
+    await this._ensureIndex();
+    
+    // Save vector index
     this.index.save(`${path}/index.bin`);
     
     // Save metadata
@@ -228,7 +266,10 @@ class SemanticCache {
    * @param {string} path - Directory path
    */
   async load(path) {
-    // Load HNSW index
+    // Ensure index is initialized before loading
+    await this._ensureIndex();
+    
+    // Load vector index
     this.index.load(`${path}/index.bin`);
     
     // Load metadata
