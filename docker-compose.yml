@@ -3,7 +3,7 @@ version: '3.8'
 
 services:
   # ============================================================================
-  # CORE SERVICES (Always run)
+  # MAIN APPLICATION
   # ============================================================================
   
   redis:
@@ -22,11 +22,11 @@ services:
       retries: 5
     restart: unless-stopped
 
-  core:
+  erion-ember:
     build:
-      context: ./core
+      context: .
       dockerfile: Dockerfile
-    container_name: erion-core
+    container_name: erion-ember
     ports:
       - "3000:3000"
     environment:
@@ -58,12 +58,12 @@ services:
       - benchmark
     environment:
       - K6_OUT=json=/results/k6-results.json
-      - CORE_URL=http://core:3000
+      - CORE_URL=http://erion-ember:3000
     volumes:
       - ./benchmark/k6:/k6
       - ./benchmark/results:/results
     depends_on:
-      - core
+      - erion-ember
     networks:
       - erion-network
     command: run /k6/smoke-test.js
@@ -108,32 +108,6 @@ services:
       - influxdb
     networks:
       - erion-network
-
-  # ============================================================================
-  # LEGACY MINI-REDIS SERVICES (Kept for compatibility)
-  # ============================================================================
-  
-  mini-redis-core:
-    build:
-      context: ./services/mini-redis-core
-      dockerfile: Dockerfile
-    container_name: mini-redis-core
-    ports:
-      - "6380:6380"
-    environment:
-      - NODE_ENV=production
-      - REDIS_PORT=6380
-    networks:
-      - erion-network
-    restart: unless-stopped
-    profiles:
-      - legacy
-    healthcheck:
-      test: ["CMD", "node", "-e", "const net = require('net'); const client = net.connect(6380, 'localhost', () => { client.write('PING\\n'); client.on('data', () => { client.end(); process.exit(0); }); }); client.on('error', () => process.exit(1));"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 networks:
   erion-network:
