@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
-    "annoy.js": "*",
+    "annoy.js": "^2.1.6",
     "hnswlib-node": "^2.0.0",
     "lz4js": "^0.2.0",
     "xxhash-addon": "^2.0.0",

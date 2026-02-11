@@ -23,8 +23,7 @@ describe('VectorIndex Factory', () => {
   });
 
   test('should throw error for unknown backend', async () => {
-    expect(async () => {
-      await createVectorIndex({ dim: 128, maxElements: 1000, backend: 'unknown' });
-    }).toThrow();
+    expect(createVectorIndex({ dim: 128, maxElements: 1000, backend: 'unknown' }))
+      .rejects.toThrow(/Unknown vector index backend/);
   });
 });
