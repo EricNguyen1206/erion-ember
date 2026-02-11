@@ -39,10 +39,10 @@ describe('AnnoyVectorIndex', () => {
     index.addItem(vector, 42);
     
     const tempPath = '/tmp/test-annoy-index.json';
-    index.save(tempPath);
+    await index.save(tempPath);
     
     const newIndex = new AnnoyVectorIndex(dim, maxElements, 'cosine');
-    newIndex.load(tempPath);
+    await newIndex.load(tempPath);
     
     // getCount() returns currentId (next available ID), not item count
     // Adding item with ID 42 sets currentId to 43

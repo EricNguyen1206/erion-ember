@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { createVectorIndex } from './vector-index/index.js';
+import { createVectorIndex } from './vector-index/factory.js';
 import Quantizer from './quantizer.js';
 import Compressor from './compressor.js';
 import Normalizer from './normalizer.js';
@@ -267,7 +267,7 @@ class SemanticCache {
     await this._ensureIndex();
     
     // Save vector index
-    this.index.save(`${path}/index.bin`);
+    await this.index.save(`${path}/index.bin`);
     
     // Save metadata
     const metadata = {
@@ -291,7 +291,7 @@ class SemanticCache {
     await this._ensureIndex();
     
     // Load vector index
-    this.index.load(`${path}/index.bin`);
+    await this.index.load(`${path}/index.bin`);
     
     // Load metadata
     const data = await fs.readFile(`${path}/metadata.json`, 'utf8');
