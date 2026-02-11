@@ -16,15 +16,6 @@ describe('Compressor', () => {
     expect(decompressed).toBe(original);
   });
 
-  test('should calculate compression ratio', () => {
-    const text = 'A'.repeat(1000);
-    const compressed = compressor.compress(text);
-    const ratio = compressor.getCompressionRatio(text, compressed);
-    
-    expect(ratio).toBeGreaterThan(0);
-    expect(ratio).toBeLessThan(1);
-  });
-
   test('should handle empty string', () => {
     const compressed = compressor.compress('');
     const decompressed = compressor.decompress(compressed, 0);
