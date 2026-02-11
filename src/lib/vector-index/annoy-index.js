@@ -1,5 +1,5 @@
 import Annoy from 'annoy.js';
-import { promises as fs } from 'fs';
+import fs from 'fs/promises';
 import VectorIndex from './interface.js';
 
 /**

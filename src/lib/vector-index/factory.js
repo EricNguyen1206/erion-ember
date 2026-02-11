@@ -12,8 +12,8 @@ import VectorIndex from './interface.js';
 export async function createVectorIndex(options = {}) {
   const { dim, maxElements, space = 'cosine' } = options;
   
-  // Determine backend: environment variable > option > default
-  const backend = process.env.VECTOR_INDEX_BACKEND || options.backend || 'annoy';
+  // Determine backend: option > environment variable > default
+  const backend = options.backend || process.env.VECTOR_INDEX_BACKEND || 'annoy';
 
   // Explicitly validate supported backends
   const supportedBackends = ['annoy', 'hnsw'];
