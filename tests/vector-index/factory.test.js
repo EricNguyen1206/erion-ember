@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { createVectorIndex } from '../../src/lib/vector-index/index.js';
+import { createVectorIndex } from '../../src/lib/vector-index/factory.js';
 
 describe('VectorIndex Factory', () => {
   test('should create AnnoyVectorIndex by default', async () => {

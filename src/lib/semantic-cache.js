@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { createVectorIndex } from './vector-index/index.js';
+import { createVectorIndex } from './vector-index/factory.js';
 import Quantizer from './quantizer.js';
 import Compressor from './compressor.js';
 import Normalizer from './normalizer.js';
