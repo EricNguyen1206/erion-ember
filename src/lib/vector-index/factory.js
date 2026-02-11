@@ -12,8 +12,14 @@ import VectorIndex from './interface.js';
 export async function createVectorIndex(options = {}) {
   const { dim, maxElements, space = 'cosine' } = options;
   
-  // Determine backend: environment variable > option > default
-  const backend = process.env.VECTOR_INDEX_BACKEND || options.backend || 'annoy';
+  // Determine backend: option > environment variable > default
+  const backend = options.backend || process.env.VECTOR_INDEX_BACKEND || 'annoy';
+
+  // Explicitly validate supported backends
+  const supportedBackends = ['annoy', 'hnsw'];
+  if (!supportedBackends.includes(backend)) {
+    throw new Error(`Unknown vector index backend: ${backend}. Use 'annoy' or 'hnsw'.`);
+  }
 
   if (backend === 'annoy') {
     // Dynamically import AnnoyVectorIndex
@@ -34,8 +40,6 @@ export async function createVectorIndex(options = {}) {
       );
     }
   }
-
-  throw new Error(`Unknown vector index backend: ${backend}. Use 'annoy' or 'hnsw'.`);
 }
 
 export { VectorIndex };

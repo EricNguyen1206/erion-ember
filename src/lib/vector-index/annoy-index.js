@@ -1,5 +1,5 @@
 import Annoy from 'annoy.js';
-import { promises as fs } from 'fs';
+import fs from 'fs/promises';
 import VectorIndex from './interface.js';
 
 /**
@@ -115,7 +115,7 @@ class AnnoyVectorIndex extends VectorIndex {
    * Save index to file (JSON format)
    * @param {string} path - File path
    */
-  save(path) {
+  async save(path) {
     // Annoy.js supports toJson() for serialization
     const json = this.annoy.toJson();
     const data = {
@@ -126,15 +126,15 @@ class AnnoyVectorIndex extends VectorIndex {
       annoyJson: json
     };
     
-    require('fs').writeFileSync(path, JSON.stringify(data));
+    await fs.writeFile(path, JSON.stringify(data));
   }
 
   /**
    * Load index from file
    * @param {string} path - File path
    */
-  load(path) {
-    const data = JSON.parse(require('fs').readFileSync(path, 'utf8'));
+  async load(path) {
+    const data = JSON.parse(await fs.readFile(path, 'utf8'));
     
     this.dim = data.dim;
     this.maxElements = data.maxElements;

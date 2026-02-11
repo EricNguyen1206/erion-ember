@@ -36,7 +36,7 @@ export class VectorIndex {
    * Save index to file
    * @param {string} path - File path
    */
-  save(path) {
+  async save(path) {
     throw new Error('save must be implemented');
   }
 
@@ -44,7 +44,7 @@ export class VectorIndex {
    * Load index from file
    * @param {string} path - File path
    */
-  load(path) {
+  async load(path) {
     throw new Error('load must be implemented');
   }
 
