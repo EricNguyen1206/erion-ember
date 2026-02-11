@@ -58,16 +58,16 @@ describe('HNSWIndex', () => {
     });
   });
 
-  test('should save and load index', () => {
+  test('should save and load index', async () => {
     const vector = Array(dim).fill(0).map(() => Math.random());
     index.addItem(vector, 42);
     
     const fs = require('fs');
     const tempFile = './test-index.bin';
-    index.save(tempFile);
+    await index.save(tempFile);
     
     const newIndex = new HNSWIndex(dim, maxElements, 'cosine');
-    newIndex.load(tempFile);
+    await newIndex.load(tempFile);
     
     const results = newIndex.search(vector, 1);
     expect(results[0].id).toBe(42);

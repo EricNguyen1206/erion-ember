@@ -63,7 +63,7 @@ class HNSWVectorIndex extends VectorIndex {
    * Save index to file
    * @param {string} path - File path
    */
-  save(path) {
+  async save(path) {
     this.index.writeIndexSync(path);
   }
 
@@ -71,7 +71,7 @@ class HNSWVectorIndex extends VectorIndex {
    * Load index from file
    * @param {string} path - File path
    */
-  load(path) {
+  async load(path) {
     // Create new index instance and load
     this.index = new hnswlib.HierarchicalNSW(this.space, this.dim);
     this.index.readIndexSync(path);
