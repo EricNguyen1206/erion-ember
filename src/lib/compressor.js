@@ -39,18 +39,6 @@ class Compressor {
     const decompressed = lz4js.decompress(data);
     return Buffer.from(decompressed).toString('utf8');
   }
-
-  /**
-   * Calculate compression ratio
-   * @param {string} original - Original data
-   * @param {Buffer} compressed - Compressed data
-   * @returns {number} Ratio (0-1)
-   */
-  getCompressionRatio(original, compressed) {
-    const originalSize = Buffer.byteLength(original, 'utf8');
-    if (originalSize === 0) return 0;
-    return compressed.length / originalSize;
-  }
 }
 
 export default Compressor;
