@@ -3,19 +3,17 @@ import lz4js from 'lz4js';
 /**
  * LZ4 Compressor - Fast compression for text data
  */
-class Compressor {
-  constructor() {}
-
+export class Compressor {
   /**
    * Compress string using LZ4
-   * @param {string} data - String to compress
-   * @returns {Buffer} Compressed data
+   * @param data - String to compress
+   * @returns Compressed data buffer
    */
-  compress(data) {
+  compress(data: string): Buffer {
     if (!data || data.length === 0) {
       return Buffer.alloc(0);
     }
-    
+
     const input = Buffer.from(data, 'utf8');
     const compressed = lz4js.compress(input);
     return Buffer.from(compressed);
@@ -23,17 +21,15 @@ class Compressor {
 
   /**
    * Decompress LZ4 data
-   * @param {Buffer} data - Compressed data
-   * @param {number} originalSize - Original uncompressed size
-   * @returns {string} Decompressed string
+   * @param data - Compressed data
+   * @param originalSize - Original uncompressed size (for compatibility)
+   * @returns Decompressed string
    */
-  decompress(data, originalSize) {
+  decompress(data: Buffer, originalSize: number): string {
     if (!data || data.length === 0) {
       return '';
     }
-    
-    // lz4js.decompress returns a new Uint8Array (or Buffer)
-    // It doesn't strictly need originalSize but we keep the signature compatible
+
     const decompressed = lz4js.decompress(data);
     return Buffer.from(decompressed).toString('utf8');
   }

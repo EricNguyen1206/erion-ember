@@ -1,4 +1,4 @@
-# Erion Ember - LLM Semantic Cache with K6 Benchmarking
+# Erion Ember - LLM Semantic Cache MCP Server
 version: '3.8'
 
 services:
@@ -6,67 +6,24 @@ services:
   # MAIN APPLICATION
   # ============================================================================
   
-  redis:
-    image: redis:7-alpine
-    container_name: erion-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - erion-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    restart: unless-stopped
-
   erion-ember:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: erion-ember
-    ports:
-      - "3000:3000"
+    # MCP server uses stdio transport, no ports needed
     environment:
       - NODE_ENV=production
-      - REDIS_URL=redis://redis:6379
-      - PORT=3000
       - OLLAMA_URL=http://host.docker.internal:11434
-    depends_on:
-      redis:
-        condition: service_healthy
+    volumes:
+      # Mount cache directory for persistence
+      - ./cache:/app/cache
     networks:
       - erion-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-  # ============================================================================
-  # BENCHMARK SERVICES (Only with --profile benchmark)
-  # ============================================================================
-  
-  k6:
-    image: grafana/k6:latest
-    container_name: erion-k6
-    profiles:
-      - benchmark
-    environment:
-      - K6_OUT=json=/results/k6-results.json
-      - CORE_URL=http://erion-ember:3000
-    volumes:
-      - ./benchmark/k6:/k6
-      - ./benchmark/results:/results
-    depends_on:
-      - erion-ember
-    networks:
-      - erion-network
-    command: run /k6/smoke-test.js
+    # No healthcheck for stdio MCP server
+    stdin_open: true
+    tty: true
 
   # ============================================================================
   # MONITORING SERVICES (Optional with --profile monitoring)
@@ -114,7 +71,5 @@ networks:
     driver: bridge
 
 volumes:
-  redis_data:
-    driver: local
   influxdb_data:
     driver: local
