@@ -21,8 +21,10 @@ class SemanticCache {
     this.normalizer = new Normalizer();
     
     // Redis Vector Store
+    // Pass options down to RedisVectorStore (including redisClient if present)
     this.store = new RedisVectorStore({
       dim: this.dim,
+      redisClient: options.redisClient, // Pass injected client
       // Redis options are picked up from env vars in RedisVectorStore
     });
 
