@@ -1,4 +1,4 @@
-# 🚀 Erion Ember
+# Erion Ember
 
 LLM Semantic Cache MCP Server - Production-ready semantic caching for AI coding assistants via the Model Context Protocol.
 
@@ -8,15 +8,15 @@ Erion Ember provides an MCP server that caches LLM responses using semantic simi
 
 ## Features
 
-- ✅ **MCP Protocol**: Standardized tool interface for AI assistants
-- ✅ **Semantic Caching**: Intelligent cache with vector similarity matching
-- ✅ **Multi-Provider**: Works with any AI provider (Claude, OpenAI, Groq, etc.)
-- ✅ **Dual Vector Backends**: 
-  - **Annoy.js** (default): Pure JavaScript, works immediately
-  - **HNSW** (optimized): C++ implementation, maximum performance via Docker
-- ✅ **Embedding Generation**: Built-in embedding service (OpenAI or mock)
-- ✅ **Cost Tracking**: Monitor token savings and cost reductions
-- ✅ **Bun Runtime**: Blazing fast JavaScript runtime
+- MCP Protocol: Standardized tool interface for AI assistants
+- Semantic Caching: Intelligent cache with vector similarity matching
+- Multi-Provider: Works with any AI provider (Claude, OpenAI, Groq, etc.)
+- Dual Vector Backends: 
+  - Annoy.js (default): Pure JavaScript, works immediately
+  - HNSW (optimized): C++ implementation, maximum performance via Docker
+- Embedding Generation: Built-in embedding service (OpenAI or mock)
+- Cost Tracking: Monitor token savings and cost reductions
+- Bun Runtime: Blazing fast JavaScript runtime
 
 ## Quick Start
 
@@ -43,7 +43,7 @@ bun install
 bun run dev
 ```
 
-The server uses **Annoy.js** by default - a pure JavaScript vector search library that requires no native compilation.
+The server uses Annoy.js by default - a pure JavaScript vector search library that requires no native compilation.
 
 ### Production (HNSW - Maximum Performance)
 
@@ -59,19 +59,19 @@ bun run docker:run
 
 ### Annoy.js (Default)
 
-- ✅ **Zero dependencies** - Pure JavaScript
-- ✅ **Immediate startup** - No build tools needed
-- ✅ **Cross-platform** - Works everywhere
-- ⚡ **Performance**: ~1-5ms search for 10K vectors
-- 📦 **Best for**: Development, testing, smaller caches
+- Zero dependencies - Pure JavaScript
+- Immediate startup - No build tools needed
+- Cross-platform - Works everywhere
+- Performance: ~1-5ms search for 10K vectors
+- Best for: Development, testing, smaller caches
 
 ### HNSW (Optimized)
 
-- 🚀 **Maximum performance** - State-of-the-art C++ implementation
-- 📈 **Scales to millions** - Efficient for large vector sets
-- 🐳 **Docker recommended** - Pre-built with all dependencies
-- ⚡ **Performance**: ~0.1-1ms search for 100K+ vectors
-- 📦 **Best for**: Production, large-scale deployments
+- Maximum performance - State-of-the-art C++ implementation
+- Scales to millions - Efficient for large vector sets
+- Docker recommended - Pre-built with all dependencies
+- Performance: ~0.1-1ms search for 100K+ vectors
+- Best for: Production, large-scale deployments
 
 ### Selecting Backend
 
@@ -124,17 +124,17 @@ Add to `.opencode/config.json`:
 
 ## Available Tools
 
-### `ai_complete`
+### ai_complete
 
 Check cache for a prompt and return cached response or indicate cache miss.
 
-**Parameters:**
-- `prompt` (string, required): The prompt to complete
-- `embedding` (number[], optional): Pre-computed embedding vector
-- `metadata` (object, optional): Additional metadata to store
-- `similarityThreshold` (number, optional): Override similarity threshold (0-1)
+Parameters:
+- prompt (string, required): The prompt to complete
+- embedding (number[], optional): Pre-computed embedding vector
+- metadata (object, optional): Additional metadata to store
+- similarityThreshold (number, optional): Override similarity threshold (0-1)
 
-**Response (cache hit):**
+Response (cache hit):
 ```json
 {
   "cached": true,
@@ -145,7 +145,7 @@ Check cache for a prompt and return cached response or indicate cache miss.
 }
 ```
 
-**Response (cache miss):**
+Response (cache miss):
 ```json
 {
   "cached": false,
@@ -153,35 +153,35 @@ Check cache for a prompt and return cached response or indicate cache miss.
 }
 ```
 
-### `cache_store`
+### cache_store
 
 Store a prompt/response pair in the cache.
 
-**Parameters:**
-- `prompt` (string, required): The prompt to cache
-- `response` (string, required): The AI response
-- `embedding` (number[], optional): Pre-computed embedding
-- `metadata` (object, optional): Additional metadata
-- `ttl` (number, optional): Time-to-live in seconds (preserved across cache save/load)
+Parameters:
+- prompt (string, required): The prompt to cache
+- response (string, required): The AI response
+- embedding (number[], optional): Pre-computed embedding
+- metadata (object, optional): Additional metadata
+- ttl (number, optional): Time-to-live in seconds (preserved across cache save/load)
 
-### `cache_check`
+### cache_check
 
 Check if a prompt exists in cache without storing.
 
-**Parameters:**
-- `prompt` (string, required): The prompt to check
-- `embedding` (number[], optional): Pre-computed embedding
-- `similarityThreshold` (number, optional): Override similarity threshold
+Parameters:
+- prompt (string, required): The prompt to check
+- embedding (number[], optional): Pre-computed embedding
+- similarityThreshold (number, optional): Override similarity threshold
 
-### `generate_embedding`
+### generate_embedding
 
 Generate embedding vector for text.
 
-**Parameters:**
-- `text` (string, required): Text to embed
-- `model` (string, optional): Embedding model to use (OpenAI only; mock echoes label)
+Parameters:
+- text (string, required): Text to embed
+- model (string, optional): Embedding model to use (OpenAI only; mock echoes label)
 
-**Response:**
+Response:
 ```json
 {
   "embedding": [0.1, 0.2, ...],
@@ -190,11 +190,11 @@ Generate embedding vector for text.
 }
 ```
 
-### `cache_stats`
+### cache_stats
 
 Get cache statistics.
 
-**Response:**
+Response:
 ```json
 {
   "totalEntries": 100,
@@ -257,9 +257,9 @@ bun run docker:run
 
 The project includes comprehensive tests:
 
-- **Unit tests**: Individual components (SemanticCache, EmbeddingService)
-- **Integration tests**: Full MCP protocol workflow
-- **Vector index tests**: Both Annoy.js and HNSW implementations
+- Unit tests: Individual components (SemanticCache, EmbeddingService)
+- Integration tests: Full MCP protocol workflow
+- Vector index tests: Both Annoy.js and HNSW implementations
 
 ```bash
 # Run all tests
@@ -311,20 +311,20 @@ erion-ember/
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VECTOR_INDEX_BACKEND` | Vector search backend: `annoy` or `hnsw` | `annoy` |
-| `EMBEDDING_PROVIDER` | Embedding provider: `mock` or `openai` | `mock` |
-| `OPENAI_API_KEY` | OpenAI API key (if provider=openai) | - |
-| `CACHE_SIMILARITY_THRESHOLD` | Minimum similarity for cache hits | `0.85` |
-| `CACHE_MAX_ELEMENTS` | Maximum cache entries | `100000` |
-| `CACHE_DEFAULT_TTL` | Default TTL in seconds | `3600` |
-| `NODE_ENV` | Environment mode | `development` |
+| VECTOR_INDEX_BACKEND | Vector search backend: annoy or hnsw | annoy |
+| EMBEDDING_PROVIDER | Embedding provider: mock or openai | mock |
+| OPENAI_API_KEY | OpenAI API key (if provider=openai) | - |
+| CACHE_SIMILARITY_THRESHOLD | Minimum similarity for cache hits | 0.85 |
+| CACHE_MAX_ELEMENTS | Maximum cache entries | 100000 |
+| CACHE_DEFAULT_TTL | Default TTL in seconds | 3600 |
+| NODE_ENV | Environment mode | development |
 
 ## Performance Comparison
 
 | Backend | Search Time (10K vectors) | Search Time (100K vectors) | Build Time | Dependencies |
 |---------|---------------------------|----------------------------|------------|--------------|
-| **Annoy.js** | ~2-5ms | ~10-20ms | Fast | None (pure JS) |
-| **HNSW** | ~0.5-1ms | ~1-3ms | Medium | C++ build tools |
+| Annoy.js | ~2-5ms | ~10-20ms | Fast | None (pure JS) |
+| HNSW | ~0.5-1ms | ~1-3ms | Medium | C++ build tools |
 
 ## Troubleshooting
 
@@ -353,11 +353,11 @@ Contributions are welcome! Please read our contributing guidelines and submit pu
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
 
-- Built with [Bun](https://bun.sh/)
-- Vector search: [Annoy.js](https://github.com/DanielKRing1/Annoy.js) (pure JS) and [hnswlib-node](https://github.com/yahoojapan/hnswlib-node) (C++)
-- MCP Protocol: [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol)
-- Protocol: [Model Context Protocol](https://modelcontextprotocol.io/)
+- Built with Bun (https://bun.sh/)
+- Vector search: Annoy.js (pure JS) and hnswlib-node (C++)
+- MCP Protocol: @modelcontextprotocol/sdk
+- Protocol: Model Context Protocol (https://modelcontextprotocol.io/)
