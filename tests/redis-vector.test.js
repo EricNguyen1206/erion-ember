@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { Buffer } from 'buffer';
 
-// Mock Redis methods
+// Mock Redis methods - define these BEFORE importing the module
 const mockRedisCall = mock(() => Promise.resolve([]));
 const mockRedisHset = mock(() => Promise.resolve(1));
 const mockRedisHgetall = mock(() => Promise.resolve({}));
@@ -14,21 +14,25 @@ const mockRedisPipeline = mock(() => ({
   exec: mockPipelineExec
 }));
 
-// Mock ioredis module
+// Create a class for the mock
+class MockRedis {
+  constructor() {
+    this.call = mockRedisCall;
+    this.hset = mockRedisHset;
+    this.hgetall = mockRedisHgetall;
+    this.del = mockRedisDel;
+    this.expire = mockRedisExpire;
+    this.pipeline = mockRedisPipeline;
+    this.disconnect = mock(() => {});
+    this.on = mock(() => {});
+  }
+}
+
+// Mock ioredis module using factory function
+// We need to return an object that has a default property which is the class
 mock.module('ioredis', () => {
   return {
-    default: class Redis {
-      constructor() {
-        this.call = mockRedisCall;
-        this.hset = mockRedisHset;
-        this.hgetall = mockRedisHgetall;
-        this.del = mockRedisDel;
-        this.expire = mockRedisExpire;
-        this.pipeline = mockRedisPipeline;
-        this.disconnect = mock(() => {});
-        this.on = mock(() => {});
-      }
-    }
+    default: MockRedis
   };
 });
 
@@ -39,16 +43,17 @@ describe('RedisVectorStore', async () => {
   let store;
 
   beforeEach(() => {
-    store = new RedisVectorStore({
-      redisUrl: 'redis://mock:6379',
-      indexName: 'test_idx'
-    });
     mockRedisCall.mockClear();
     mockRedisHset.mockClear();
     mockRedisHgetall.mockClear();
     mockRedisPipeline.mockClear();
     mockPipelineExec.mockClear();
     mockPipelineHgetall.mockClear();
+
+    store = new RedisVectorStore({
+      redisUrl: 'redis://mock:6379',
+      indexName: 'test_idx'
+    });
   });
 
   it('should create index if not exists', async () => {
