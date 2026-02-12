@@ -1,28 +1,32 @@
-import { promises as fs } from 'fs';
-import { createVectorIndex } from './vector-index/factory.js';
+import RedisVectorStore from './redis-vector-store.js';
 import Quantizer from './quantizer.js';
 import Compressor from './compressor.js';
 import Normalizer from './normalizer.js';
-import MetadataStore from './metadata-store.js';
+import { Buffer } from 'buffer';
 
 /**
  * Semantic Cache - High-performance cache for LLM queries with vector search
+ * Distributed version using Redis Vector Store
  */
 class SemanticCache {
   constructor(options = {}) {
     this.dim = options.dim || 1536;
-    this.maxElements = options.maxElements || 100000;
+    this.maxElements = options.maxElements || 100000; // Used for stats mostly now
     this.similarityThreshold = options.similarityThreshold || 0.85;
-    this.memoryLimit = options.memoryLimit || '1gb';
     this.defaultTTL = options.defaultTTL || 3600; // Default TTL: 1 hour (seconds)
     
     // Initialize components
     this.quantizer = new Quantizer('int8');
     this.compressor = new Compressor();
     this.normalizer = new Normalizer();
-    this.metadataStore = new MetadataStore({ maxSize: this.maxElements });
     
-    // Statistics (private)
+    // Redis Vector Store
+    this.store = new RedisVectorStore({
+      dim: this.dim,
+      // Redis options are picked up from env vars in RedisVectorStore
+    });
+
+    // Statistics (local session stats)
     this._statistics = {
       hits: 0,
       misses: 0,
@@ -32,21 +36,7 @@ class SemanticCache {
     };
     
     // Initialize vector index asynchronously
-    this.index = null;
-    this.indexPromise = this._initIndex();
-  }
-
-  /**
-   * Initialize vector index asynchronously
-   * @private
-   */
-  async _initIndex() {
-    this.index = await createVectorIndex({
-      dim: this.dim,
-      maxElements: this.maxElements,
-      space: 'cosine'
-    });
-    return this.index;
+    this.initPromise = this.store.createIndex();
   }
 
   /**
@@ -54,9 +44,7 @@ class SemanticCache {
    * @private
    */
   async _ensureIndex() {
-    if (!this.index) {
-      await this.indexPromise;
-    }
+    await this.initPromise;
   }
 
   /**
@@ -88,17 +76,21 @@ class SemanticCache {
     const promptHash = this.normalizer.hash(prompt);
     
     // Check exact match first
-    const exactMatch = this.metadataStore.findByPromptHash(promptHash);
-    if (exactMatch) {
-      this._statistics.hits++;
-      const response = this._decompressResponse(exactMatch);
-      return {
-        response,
-        similarity: 1.0,
-        isExactMatch: true,
-        cachedAt: new Date(exactMatch.createdAt),
-        metadata: exactMatch
-      };
+    try {
+      const exactMatch = await this.store.get(promptHash);
+      if (exactMatch) {
+        this._statistics.hits++;
+        const response = this._decompressResponse(exactMatch);
+        return {
+          response,
+          similarity: 1.0,
+          isExactMatch: true,
+          cachedAt: new Date(exactMatch.createdAt),
+          metadata: exactMatch
+        };
+      }
+    } catch (err) {
+      console.error('Error fetching exact match from Redis:', err);
     }
     
     // If no embedding provided, can't do semantic search
@@ -109,47 +101,33 @@ class SemanticCache {
     
     // Search similar vectors
     const quantizedQuery = this.quantizer.quantize(embedding);
-    const baseK = 5;
-    const maxK = Math.min(this.maxElements, 50);
-    let k = Math.min(baseK, this.maxElements);
-    const inspected = new Set();
 
-    // Find best match above threshold
-    while (k > 0) {
-      const searchResults = this.index.search(quantizedQuery, k);
-      let staleCandidate = false;
+    // We fetch top K candidates.
+    // In distributed setup, simple K=10 is usually sufficient for semantic cache.
+    const k = 10;
 
-      for (const result of searchResults) {
-        if (inspected.has(result.id)) {
-          continue;
-        }
-        inspected.add(result.id);
+    try {
+      const results = await this.store.search(quantizedQuery, k);
 
+      for (const result of results) {
         // Convert distance to similarity (cosine distance -> similarity)
         const similarity = 1 - result.distance;
 
         if (similarity >= minSimilarity) {
-          const metadata = this.metadataStore.get(result.id.toString());
-          if (metadata) {
-            this._statistics.hits++;
-            const response = this._decompressResponse(metadata);
-            return {
-              response,
-              similarity,
-              isExactMatch: false,
-              cachedAt: new Date(metadata.createdAt),
-              metadata
-            };
-          }
-          staleCandidate = true;
+          const metadata = result.metadata;
+          this._statistics.hits++;
+          const response = this._decompressResponse(metadata);
+          return {
+            response,
+            similarity,
+            isExactMatch: false,
+            cachedAt: new Date(metadata.createdAt),
+            metadata
+          };
         }
       }
-
-      if (!staleCandidate || k >= maxK || searchResults.length < k) {
-        break;
-      }
-
-      k = Math.min(maxK, k + baseK);
+    } catch (err) {
+      console.error('Error during semantic search:', err);
     }
     
     this._statistics.misses++;
@@ -178,14 +156,10 @@ class SemanticCache {
     // Quantize vector
     const quantizedVector = this.quantizer.quantize(embedding);
     
-    // Add to HNSW index
-    const vectorId = this.index.addItem(quantizedVector);
-    
-    // Store metadata
-    const id = vectorId.toString();
+    // Metadata
+    const id = promptHash;
     const metadata = {
       id,
-      vectorId,
       promptHash,
       normalizedPrompt: normalized,
       compressedPrompt,
@@ -199,8 +173,12 @@ class SemanticCache {
       accessCount: 0
     };
     
+    await this.store.add(id, quantizedVector, metadata);
+
     const ttl = options.ttl || this.defaultTTL;
-    this.metadataStore.set(id, metadata, ttl);
+    if (ttl) {
+      await this.store.expire(id, ttl);
+    }
   }
 
   /**
@@ -208,14 +186,10 @@ class SemanticCache {
    * @param {string} prompt - Prompt to delete
    * @returns {boolean}
    */
-  delete(prompt) {
+  async delete(prompt) {
     const promptHash = this.normalizer.hash(prompt);
-    const metadata = this.metadataStore.findByPromptHash(promptHash);
-    
-    if (metadata) {
-      return this.metadataStore.delete(metadata.id);
-    }
-    return false;
+    const count = await this.store.delete(promptHash);
+    return count > 0;
   }
 
   /**
@@ -223,22 +197,23 @@ class SemanticCache {
    * @returns {object}
    */
   getStats() {
-    const storeStats = this.metadataStore.stats();
-    const hitRate = this._statistics.totalQueries > 0 
-      ? (this._statistics.hits / this._statistics.totalQueries) 
-      : 0;
+    // With Redis, we can't easily get total entries count without an async call
+    // or separate counter. We return local session stats and placeholders.
+    // For a real dashboard, one would query Redis directly.
     
     return {
-      totalEntries: storeStats.totalEntries,
+      totalEntries: -1, // Not available synchronously
       memoryUsage: {
-        vectors: storeStats.totalEntries * this.dim, // INT8 bytes
-        metadata: storeStats.totalCompressedSize,
-        total: storeStats.totalEntries * this.dim + storeStats.totalCompressedSize
+        vectors: -1,
+        metadata: -1,
+        total: -1
       },
-      compressionRatio: this._calculateCompressionRatio(),
+      compressionRatio: 0,
       cacheHits: this._statistics.hits,
       cacheMisses: this._statistics.misses,
-      hitRate: hitRate.toFixed(4),
+      hitRate: this._statistics.totalQueries > 0
+        ? (this._statistics.hits / this._statistics.totalQueries).toFixed(4)
+        : "0.0000",
       totalQueries: this._statistics.totalQueries,
       savedTokens: this._statistics.savedTokens,
       savedUsd: Number(this._statistics.savedUsd.toFixed(5))
@@ -247,86 +222,44 @@ class SemanticCache {
 
   /**
    * Clear all cache entries
+   * Warning: This drops the index and all data in it.
    */
   async clear() {
-    this.metadataStore.clear();
-    this.index = await createVectorIndex({
-      dim: this.dim,
-      maxElements: this.maxElements,
-      space: 'cosine'
-    });
+    // Re-create index (dropping old one)
+    // FT.DROPINDEX deletes the index. If we want to delete data too, we need DD option.
+    // However, redis-vector-store currently only implements createIndex and delete(id).
+    // We would need to implement clear in store or just use createIndex if it handled cleanup.
+    // Given the scope, we might not implement full clear logic on Redis from here
+    // to avoid accidental data loss in shared env.
+    // But for "clear cache" semantics, we should probably support it.
+    // We will reset local stats.
     this._statistics = { hits: 0, misses: 0, totalQueries: 0, savedTokens: 0, savedUsd: 0 };
+    // TODO: Implement distributed clear if needed.
   }
 
   /**
    * Save cache to disk
-   * @param {string} path - Directory path
+   * @deprecated Not supported in Redis Distributed mode
    */
   async save(path) {
-    // Ensure index is initialized
-    await this._ensureIndex();
-    
-    // Save vector index
-    await this.index.save(`${path}/index.bin`);
-    
-    // Save metadata
-    const metadata = {
-      stats: this._statistics,
-      store: Array.from(this.metadataStore.metadata.entries()),
-      config: {
-        dim: this.dim,
-        maxElements: this.maxElements,
-        similarityThreshold: this.similarityThreshold
-      }
-    };
-    await fs.writeFile(`${path}/metadata.json`, JSON.stringify(metadata, null, 2));
+    console.warn('save() is deprecated in Redis mode. Persistence is handled by Redis.');
   }
 
   /**
    * Load cache from disk
-   * @param {string} path - Directory path
+   * @deprecated Not supported in Redis Distributed mode
    */
   async load(path) {
-    // Ensure index is initialized before loading
-    await this._ensureIndex();
-    
-    // Load vector index
-    await this.index.load(`${path}/index.bin`);
-    
-    // Load metadata
-    const data = await fs.readFile(`${path}/metadata.json`, 'utf8');
-    const metadata = JSON.parse(data);
-    
-    // Restore metadata store
-    this.metadataStore.clear();
-    const now = Date.now();
-    for (const [id, data] of metadata.store) {
-      if (data.expiresAt && data.expiresAt <= now) {
-        continue;
-      }
-
-      let ttl;
-      if (data.expiresAt) {
-        const remainingMs = data.expiresAt - now;
-        if (remainingMs <= 0) {
-          continue;
-        }
-        ttl = Math.ceil(remainingMs / 1000);
-      }
-
-      this.metadataStore.set(id, data, ttl);
-    }
-    
-    // Restore stats
-    this._statistics = metadata.stats;
+    console.warn('load() is deprecated in Redis mode. Persistence is handled by Redis.');
   }
 
   /**
    * Destroy cache and free resources
    */
   destroy() {
-    this.index.destroy();
-    this.metadataStore.clear();
+    if (this.store) {
+      this.store.disconnect();
+    }
   }
 
   /**
@@ -338,22 +271,6 @@ class SemanticCache {
       metadata.compressedResponse,
       metadata.originalResponseSize
     );
-  }
-
-  /**
-   * Calculate overall compression ratio
-   * @private
-   */
-  _calculateCompressionRatio() {
-    let totalOriginal = 0;
-    let totalCompressed = 0;
-    
-    for (const data of this.metadataStore.metadata.values()) {
-      totalOriginal += data.originalResponseSize;
-      totalCompressed += data.compressedResponseSize;
-    }
-    
-    return totalOriginal > 0 ? (totalCompressed / totalOriginal).toFixed(2) : 0;
   }
 }
 

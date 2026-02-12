@@ -18,7 +18,8 @@
     "hnswlib-node": "^2.0.0",
     "lz4js": "^0.2.0",
     "xxhash-addon": "^2.0.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "ioredis": "^5.3.2"
   },
   "devDependencies": {
     "bun-types": "latest"
