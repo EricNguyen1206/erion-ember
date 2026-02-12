@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { Buffer } from 'buffer';
 
-// Mock Redis methods - define these BEFORE importing the module
+// Mock Redis methods
 const mockRedisCall = mock(() => Promise.resolve([]));
 const mockRedisHset = mock(() => Promise.resolve(1));
 const mockRedisHgetall = mock(() => Promise.resolve({}));
@@ -14,30 +14,20 @@ const mockRedisPipeline = mock(() => ({
   exec: mockPipelineExec
 }));
 
-// Create a class for the mock
-class MockRedis {
-  constructor() {
-    this.call = mockRedisCall;
-    this.hset = mockRedisHset;
-    this.hgetall = mockRedisHgetall;
-    this.del = mockRedisDel;
-    this.expire = mockRedisExpire;
-    this.pipeline = mockRedisPipeline;
-    this.disconnect = mock(() => {});
-    this.on = mock(() => {});
-  }
-}
-
-// Mock ioredis module using factory function
-// We need to return an object that has a default property which is the class
-mock.module('ioredis', () => {
-  return {
-    default: MockRedis
-  };
-});
+// Create a mock Redis client object (not a class instance, just an object that looks like one)
+const mockRedisClient = {
+  call: mockRedisCall,
+  hset: mockRedisHset,
+  hgetall: mockRedisHgetall,
+  del: mockRedisDel,
+  expire: mockRedisExpire,
+  pipeline: mockRedisPipeline,
+  disconnect: mock(() => {}),
+  on: mock(() => {})
+};
 
 describe('RedisVectorStore', async () => {
-  // Dynamic import to ensure mock is applied
+  // Import the real class
   const { default: RedisVectorStore } = await import('../src/lib/redis-vector-store.js');
 
   let store;
@@ -50,9 +40,11 @@ describe('RedisVectorStore', async () => {
     mockPipelineExec.mockClear();
     mockPipelineHgetall.mockClear();
 
+    // Pass the mock client explicitly
     store = new RedisVectorStore({
       redisUrl: 'redis://mock:6379',
-      indexName: 'test_idx'
+      indexName: 'test_idx',
+      redisClient: mockRedisClient
     });
   });
 

@@ -12,13 +12,16 @@ class RedisVectorStore {
     this.dim = options.dim || 1536;
     this.prefix = 'ember:';
 
-    // Initialize Redis client
-    this.redis = new Redis(this.redisUrl);
-
-    // Handle connection errors
-    this.redis.on('error', (err) => {
-      console.error('Redis connection error:', err);
-    });
+    // Initialize Redis client or use provided instance (for testing)
+    if (options.redisClient) {
+      this.redis = options.redisClient;
+    } else {
+      this.redis = new Redis(this.redisUrl);
+      // Handle connection errors
+      this.redis.on('error', (err) => {
+        console.error('Redis connection error:', err);
+      });
+    }
   }
 
   /**
