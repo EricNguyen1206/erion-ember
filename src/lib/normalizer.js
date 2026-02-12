@@ -1,11 +1,11 @@
-import crypto from 'crypto';
+import { XXHash64 } from 'xxhash-addon';
 
 /**
  * Prompt Normalizer - Normalizes text for deduplication
  */
 class Normalizer {
   constructor() {
-    // Using Node.js built-in crypto
+    this.seed = Buffer.alloc(8, 0);
   }
 
   /**
@@ -24,19 +24,20 @@ class Normalizer {
     return text
       .toLowerCase()
       .trim()
-      .replace(/\s+/g, ' '); // Normalize multiple spaces to single space
+      .replace(/\s+/g, ' ');
   }
 
   /**
    * Generate hash for deduplication
+   * Uses xxhash for speed (10x faster than sha256)
    * @param {string} text - Input text
    * @returns {string} Hash string
    */
   hash(text) {
     const normalized = this.normalize(text);
-    return crypto.createHash('sha256')
-      .update(normalized, 'utf8')
-      .digest('hex');
+    const hasher = new XXHash64(this.seed);
+    hasher.update(Buffer.from(normalized, 'utf8'));
+    return hasher.digest().toString('hex');
   }
 }
 

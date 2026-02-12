@@ -12,33 +12,23 @@ import handleCacheStore from './tools/cache-store.js';
 import handleCacheStats from './tools/cache-stats.js';
 import handleGenerateEmbedding from './tools/generate-embedding.js';
 
-// Configuration from environment
 const config = {
   similarityThreshold: parseFloat(process.env.CACHE_SIMILARITY_THRESHOLD) || 0.85,
   maxElements: parseInt(process.env.CACHE_MAX_ELEMENTS) || 100000,
   defaultTTL: parseInt(process.env.CACHE_DEFAULT_TTL) || 3600,
-  embeddingProvider: process.env.EMBEDDING_PROVIDER || 'mock',
-  openaiApiKey: process.env.OPENAI_API_KEY || null
 };
 
-// Initialize services
 const cache = new SemanticCache({
-  dim: 1536,
+  dim: 384,
   maxElements: config.maxElements,
   similarityThreshold: config.similarityThreshold,
-  defaultTTL: config.defaultTTL
+  defaultTTL: config.defaultTTL,
 });
 
-const embeddingService = new EmbeddingService({
-  provider: config.embeddingProvider,
-  apiKey: config.openaiApiKey,
-  dimension: 1536
-});
+const embeddingService = new EmbeddingService();
 
-// Log startup info to stderr (not stdout - that's for MCP messages)
-console.error('🚀 Starting Erion Ember MCP Server');
-console.error(`   Embedding provider: ${config.embeddingProvider}`);
-console.error(`   Similarity threshold: ${config.similarityThreshold}`);
+console.error('Starting Erion Ember MCP Server');
+console.error(`  Threshold: ${config.similarityThreshold}`);
 
 // Create MCP server
 const server = new Server(

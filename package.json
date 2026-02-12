@@ -1,7 +1,7 @@
 {
   "name": "erion-ember",
-  "version": "2.0.0",
-  "description": "LLM Semantic Cache MCP Server",
+  "version": "2.1.0",
+  "description": "LLM Semantic Cache MCP Server with Local Embeddings",
   "main": "src/mcp-server.js",
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "docker:run": "docker run -e VECTOR_INDEX_BACKEND=hnsw erion-ember"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "annoy.js": "^2.1.6",
     "hnswlib-node": "^2.0.0",

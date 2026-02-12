@@ -16,7 +16,6 @@ describe('MCP Server', () => {
       env: {
         ...process.env,
         NODE_ENV: 'test',
-        EMBEDDING_PROVIDER: 'mock'
       }
     });
   });

@@ -5,45 +5,35 @@ const cacheStoreSchema = z.object({
   response: z.string().min(1),
   embedding: z.array(z.number()).optional(),
   metadata: z.record(z.any()).optional(),
-  ttl: z.number().positive().optional()
+  ttl: z.number().positive().optional(),
 });
 
-/**
- * Cache Store tool handler
- * Store a prompt/response pair in the cache
- * @param {object} params - Tool parameters
- * @param {SemanticCache} cache - Cache instance
- * @param {EmbeddingService} embeddingService - Embedding service instance
- * @returns {object} Tool result
- */
 export async function handleCacheStore(params, cache, embeddingService) {
-  const validated = cacheStoreSchema.parse(params);
-  const { prompt, response, embedding, metadata, ttl } = validated;
+  const { prompt, response, embedding, metadata, ttl } = cacheStoreSchema.parse(params);
 
-  // Use provided embedding or generate one
   let vector = embedding;
-  if (!vector && embeddingService.isConfigured()) {
-    const embeddingResult = await embeddingService.generate(prompt);
-    if (embeddingResult) {
-      vector = embeddingResult.embedding;
-    }
+  if (!vector) {
+    const result = await embeddingService.generate(prompt);
+    if (result) vector = result.embedding;
   }
 
-  // Store in cache (exact-match only if no embedding)
-  await cache.set(prompt, response, vector || new Array(1536).fill(0), {
-    ttl,
-    metadata
-  });
+  if (!vector) {
+    return {
+      content: [{ type: 'text', text: JSON.stringify({
+        error: 'Embedding required for semantic cache. Could not generate embedding.',
+      }, null, 2) }],
+      isError: true,
+    };
+  }
+
+  await cache.set(prompt, response, vector, { ttl, metadata });
 
   return {
-    content: [{
-      type: 'text',
-      text: JSON.stringify({
-        success: true,
-        message: 'Response stored in cache',
-        hasEmbedding: Boolean(vector)
-      }, null, 2)
-    }]
+    content: [{ type: 'text', text: JSON.stringify({
+      success: true,
+      message: 'Response stored in cache',
+      hasEmbedding: Boolean(vector),
+    }, null, 2) }],
   };
 }
 

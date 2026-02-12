@@ -2,12 +2,8 @@
  * Vector Quantizer - Converts FP32 vectors to INT8 for memory efficiency
  */
 class Quantizer {
-  constructor(precision = 'int8') {
-    this.precision = precision;
-    
-    if (precision !== 'int8') {
-      throw new Error('Only int8 quantization is supported');
-    }
+  constructor() {
+    // Only int8 quantization is supported
   }
 
   /**

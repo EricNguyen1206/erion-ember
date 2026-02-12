@@ -1,273 +1,243 @@
-# 🚀 Erion Ember
+# Erion Ember
 
-Bộ nhớ đệm ngữ nghĩa cho LLM với kiểm thử hiệu năng K6 - Giải pháp sẵn sàng cho production để lưu trữ phản hồi LLM với khả năng so khớp tương đồng ngữ nghĩa.
+LLM Semantic Cache MCP Server - Semantic caching cho AI coding assistants qua Model Context Protocol.
 
-[English](README.md) | **Tiếng Việt**
+[English](README.md) | **Tieng Viet**
 
-## Tổng quan
+## Tong quan
 
-Erion Ember cung cấp một lớp bộ nhớ đệm ngữ nghĩa hiệu năng cao cho các ứng dụng LLM, giúp giảm chi phí và độ trễ bằng cách phục vụ các phản hồi đã được lưu trữ cho các truy vấn có ngữ nghĩa tương tự.
+Erion Ember cung cap MCP server luu cache phan hoi LLM dua tren do tuong dong ngu nghia. Tich hop voi cac AI coding assistant nhu Claude Code, Opencode, Codex de giam chi phi API va do tre.
 
-## Tính năng
+## Tinh nang
 
-- ✅ **Bun Runtime**: JavaScript runtime nhẹ và nhanh
-- ✅ **Fastify HTTP API**: Framework web hiệu năng cao
-- ✅ **Bộ nhớ đệm ngữ nghĩa**: Cache thông minh với khả năng so khớp tương đồng
-- ✅ **Kiểm thử K6**: Bộ công cụ kiểm thử tải chuyên nghiệp
-- ✅ **Docker Ready**: Triển khai container với nhiều profiles
-- ✅ **Giám sát**: Tích hợp Grafana + InfluxDB (tùy chọn)
+- **MCP Protocol**: Giao dien tool chuan cho AI assistants
+- **Semantic Caching**: Cache thong minh voi vector similarity matching
+- **Multi-Provider**: Hoat dong voi moi AI provider (Claude, OpenAI, Groq, v.v.)
+- **Dual Vector Backends**:
+  - **Annoy.js** (mac dinh): Pure JavaScript, chay ngay khong can build
+  - **HNSW** (toi uu): C++ implementation, hieu nang toi da qua Docker
+- **Embedding Generation**: Dich vu embedding tich hop (OpenAI hoac mock)
+- **Cost Tracking**: Theo doi token tiet kiem va giam chi phi
+- **Bun Runtime**: JavaScript runtime toc do cao
 
-## Cấu trúc dự án
+## Bat dau nhanh
+
+### Yeu cau
+
+- Bun runtime (v1.0+)
+- Docker (tuy chon, cho HNSW toi uu)
+
+### Cai dat
+
+```bash
+git clone https://github.com/EricNguyen1206/erion-ember.git
+cd erion-ember
+bun install
+```
+
+### Development (Annoy.js - Chay ngay)
+
+```bash
+bun run dev
+```
+
+Server mac dinh su dung **Annoy.js** - thu vien vector search pure JavaScript, khong can native compilation.
+
+### Production (HNSW - Hieu nang toi da)
+
+```bash
+bun run docker:build
+bun run docker:run
+```
+
+## Vector Index Backends
+
+### Annoy.js (Mac dinh)
+
+- **Zero dependencies** - Pure JavaScript
+- **Khoi dong ngay** - Khong can build tools
+- **Cross-platform** - Chay moi noi
+- **Hieu nang**: ~1-5ms search cho 10K vectors
+- **Phu hop**: Development, testing, cache nho
+
+### HNSW (Toi uu)
+
+- **Hieu nang toi da** - C++ implementation
+- **Scale toi hang trieu** - Hieu qua cho vector sets lon
+- **Docker khuyen dung** - Pre-built voi moi dependencies
+- **Hieu nang**: ~0.1-1ms search cho 100K+ vectors
+- **Phu hop**: Production, trien khai quy mo lon
+
+### Chon Backend
+
+```bash
+# Annoy.js (mac dinh, pure JS)
+VECTOR_INDEX_BACKEND=annoy bun run dev
+
+# HNSW (C++, can build tools hoac Docker)
+VECTOR_INDEX_BACKEND=hnsw bun run dev
+```
+
+## Su dung voi MCP Clients
+
+### Claude Code
+
+```json
+{
+  "mcpServers": {
+    "erion-ember": {
+      "command": "bun",
+      "args": ["run", "/path/to/erion-ember/src/mcp-server.js"],
+      "env": {
+        "EMBEDDING_PROVIDER": "mock"
+      }
+    }
+  }
+}
+```
+
+### Opencode
+
+Them vao `.opencode/config.json`:
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "erion-ember",
+      "command": "bun run /path/to/erion-ember/src/mcp-server.js",
+      "env": {
+        "EMBEDDING_PROVIDER": "mock"
+      }
+    }
+  ]
+}
+```
+
+## Cac MCP Tools
+
+| Tool | Muc dich |
+|------|----------|
+| `ai_complete` | Kiem tra cache va tra ve ket qua hoac cache miss |
+| `cache_store` | Luu cap prompt/response voi optional embedding |
+| `cache_check` | Kiem tra ton tai trong cache |
+| `generate_embedding` | Tao vector embedding |
+| `cache_stats` | Thong ke cache va chi phi tiet kiem |
+
+## Vi du Workflow
+
+```javascript
+// 1. Kiem tra cache truoc
+const result = await mcpClient.callTool('ai_complete', {
+  prompt: 'Giai thich quantum computing'
+});
+
+if (result.cached) {
+  return result.response;
+}
+
+// 2. Cache miss - goi AI provider
+const aiResponse = await callClaudeAPI('Giai thich quantum computing');
+
+// 3. Luu vao cache
+await mcpClient.callTool('cache_store', {
+  prompt: 'Giai thich quantum computing',
+  response: aiResponse
+});
+
+return aiResponse;
+```
+
+## Development
+
+```bash
+# Chay development (Annoy.js backend)
+bun run dev
+
+# Chay tests
+bun test
+
+# Chay test cu the
+bun test tests/vector-index/annoy-index.test.js
+
+# Build Docker image
+bun run docker:build
+
+# Chay Docker container voi hnswlib
+bun run docker:run
+```
+
+## Cau truc du an
 
 ```
 erion-ember/
-├── src/                            # Mã nguồn chính
-│   ├── lib/                        # Thư viện core
-│   │   ├── semantic-cache.js       # Bộ nhớ đệm ngữ nghĩa
-│   │   ├── hnsw-index.js           # Tìm kiếm vector HNSW
-│   │   ├── quantizer.js            # Lượng tử hóa INT8
-│   │   ├── compressor.js           # Nén LZ4
-│   │   └── metadata-store.js       # Lưu trữ metadata
-│   ├── routes/                     # API endpoints
-│   └── server.js                   # Fastify server
-├── tests/                          # Unit tests
-├── benchmark/                      # Bộ kiểm thử K6
-│   ├── k6/                         # Các kịch bản test
-│   └── grafana/                    # Dashboard config
-├── services/                       # Dịch vụ phụ
-├── docker-compose.yml              # Orchestration
-└── package.json                    # Dependencies
+├── src/
+│   ├── mcp-server.js          # MCP server entry point
+│   ├── lib/                   # Core caching logic
+│   │   ├── semantic-cache.js
+│   │   ├── vector-index/      # Pluggable vector search
+│   │   │   ├── interface.js   # Abstract interface
+│   │   │   ├── index.js       # Factory
+│   │   │   ├── annoy-index.js # Pure JS implementation
+│   │   │   └── hnsw-index.js  # C++ implementation
+│   │   ├── quantizer.js
+│   │   ├── compressor.js
+│   │   ├── normalizer.js
+│   │   └── metadata-store.js
+│   ├── services/
+│   │   └── embedding-service.js
+│   └── tools/                 # MCP tool handlers
+├── tests/
+├── Dockerfile
+├── .env.example
+└── package.json
 ```
 
-## Bắt đầu nhanh
+## Bien moi truong
 
-### Yêu cầu
-
-- Bun runtime (v1.0+)
-- Docker & Docker Compose v2.20+
-- K6 CLI (tùy chọn, cho kiểm thử local)
-
-### Cài đặt
-
-```bash
-# Clone repository
-git clone https://github.com/EricNguyen1206/erion-ember.git
-cd erion-ember
-
-# Cài đặt dependencies
-bun install
-
-# Sao chép file cấu hình môi trường
-cp .env.example .env
-# Chỉnh sửa .env với API key của bạn
-```
-
-### Chạy dịch vụ
-
-#### Cách 1: Chỉ Core + Redis
-
-```bash
-# Khởi động core service và Redis
-docker compose up erion-ember redis
-
-# Hoặc với npm script
-npm run docker:core
-```
-
-#### Cách 2: Core + Benchmark
-
-```bash
-# Khởi động core, redis, và K6 benchmark
-docker compose --profile benchmark up
-
-# Hoặc với npm script
-npm run benchmark
-```
-
-#### Cách 3: Full Stack (với Monitoring)
-
-```bash
-# Khởi động tất cả services bao gồm Grafana + InfluxDB
-docker compose --profile benchmark --profile monitoring up
-```
-
-### Phát triển Local
-
-```bash
-# Chế độ development với hot reload
-npm run dev
-
-# Chạy tests
-npm test
-
-# Chạy test cụ thể
-bun test tests/semantic-cache.test.js
-```
-
-## Tài liệu API
-
-### POST /v1/chat
-
-Chat với bộ nhớ đệm ngữ nghĩa.
-
-**Request:**
-```json
-{
-  "prompt": "Machine learning là gì?",
-  "model": "llama3.2"
-}
-```
-
-**Response (đã cache):**
-```json
-{
-  "response": "Machine learning là một nhánh của AI...",
-  "cached": true,
-  "similarity": 1.0,
-  "model": "llama3.2",
-  "timestamp": "2026-01-31T22:00:00.000Z",
-  "savings": {
-    "tokens_saved": 150,
-    "usd_saved": 0.0045
-  }
-}
-```
-
-**Response (chưa cache):**
-```json
-{
-  "response": "Machine learning là một nhánh của AI...",
-  "cached": false,
-  "model": "llama3.2",
-  "timestamp": "2026-01-31T22:00:00.000Z",
-  "savings": {
-    "tokens_saved": 0,
-    "usd_saved": 0
-  }
-}
-```
-
-### GET /health
-
-Endpoint kiểm tra sức khỏe.
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "timestamp": "2026-01-31T22:00:00.000Z"
-}
-```
-
-### GET /v1/stats
-
-Thống kê cache.
-
-**Response:**
-```json
-{
-  "totalEntries": 1500,
-  "cacheHits": 12500,
-  "cacheMisses": 3200,
-  "hitRate": "0.7962",
-  "savedTokens": 1250000,
-  "savedUsd": 37.50
-}
-```
-
-## Kiểm thử hiệu năng
-
-### Chạy nhanh
-
-```bash
-# Chạy smoke test local
-npm run benchmark:local
-
-# Hoặc với K6 trực tiếp
-cd benchmark
-k6 run k6/smoke-test.js
-```
-
-### Các loại test
-
-| Test | Virtual Users | Thời gian | Mục đích |
-|------|--------------|-----------|----------|
-| **smoke-test.js** | 10 VU | 30s | Kiểm tra nhanh |
-| **load-test.js** | 200 VU | 16m | Kiểm thử tải bình thường |
-| **stress-test.js** | 500 VU | 12m | Tìm điểm giới hạn |
-| **soak-test.js** | 50 VU | 70m | Phát hiện rò rỉ bộ nhớ |
-
-### Các chỉ số
-
-- **Throughput**: Số request mỗi giây (RPS)
-- **Latency**: Độ trễ p50, p95, p99
-- **Cache Hit Rate**: Tỷ lệ cache hit
-- **Token Savings**: Ước tính token tiết kiệm được
-- **Error Rate**: Tỷ lệ lỗi
-
-### Dashboard
-
-Truy cập Grafana dashboard tại http://localhost:3001 (khi sử dụng --profile monitoring)
-
-**Thông tin đăng nhập mặc định:**
-- Username: `admin`
-- Password: `admin`
-
-## Biến môi trường
-
-### Dịch vụ Core
-
-| Biến | Mô tả | Mặc định |
+| Bien | Mo ta | Mac dinh |
 |------|-------|----------|
-| `PORT` | Port server | 3000 |
-| `REDIS_URL` | URL kết nối Redis | redis://localhost:6379 |
-| `GROQ_API_KEY` | API key Groq **(bắt buộc)** | - |
-| `OLLAMA_URL` | URL Ollama API | http://localhost:11434 |
-| `NODE_ENV` | Môi trường | development |
-| `API_KEY` | API key xác thực (tùy chọn) | - |
+| `VECTOR_INDEX_BACKEND` | Vector search backend: `annoy` hoac `hnsw` | `annoy` |
+| `EMBEDDING_PROVIDER` | Embedding provider: `mock` hoac `openai` | `mock` |
+| `OPENAI_API_KEY` | OpenAI API key (neu provider=openai) | - |
+| `CACHE_SIMILARITY_THRESHOLD` | Nguong tuong dong toi thieu | `0.85` |
+| `CACHE_MAX_ELEMENTS` | So luong cache entries toi da | `100000` |
+| `CACHE_DEFAULT_TTL` | TTL mac dinh (giay) | `3600` |
+| `NODE_ENV` | Che do moi truong | `development` |
 
-### Benchmark
+## So sanh hieu nang
 
-| Biến | Mô tả | Mặc định |
-|------|-------|----------|
-| `CORE_URL` | URL endpoint core | http://localhost:3000 |
-| `K6_OUT` | Định dạng output | json |
+| Backend | Search Time (10K vectors) | Search Time (100K vectors) | Build Time | Dependencies |
+|---------|---------------------------|----------------------------|------------|--------------|
+| **Annoy.js** | ~2-5ms | ~10-20ms | Nhanh | Khong (pure JS) |
+| **HNSW** | ~0.5-1ms | ~1-3ms | Trung binh | C++ build tools |
 
-## Docker Compose Profiles
+## Xu ly su co
+
+### Loi build C++ (hnswlib)
 
 ```bash
-# Chỉ core services
-docker compose up erion-ember redis
+# Dung Annoy.js (khuyen dung cho development)
+VECTOR_INDEX_BACKEND=annoy bun run dev
 
-# Với benchmark
-docker compose --profile benchmark up
-
-# Với monitoring
-docker compose --profile monitoring up
-
-# Full stack
-docker compose --profile benchmark --profile monitoring up
+# Hoac dung Docker
+bun run docker:build
+bun run docker:run
 ```
 
-## Bảo mật
+### Loi ket noi MCP
 
-- ✅ Xác thực input với Zod schemas
-- ✅ Xác thực API key (tùy chọn, qua header `x-api-key`)
-- ✅ Rate limiting (60 req/phút)
-- ✅ Không log dữ liệu nhạy cảm
-- ✅ Thông báo lỗi an toàn trong production
+- Dam bao server xuat JSON-RPC hop le qua stdout
+- Kiem tra stderr de xem loi
+- Xac nhan cac bien moi truong dung
 
-## Đóng góp
+## Giay phep
 
-Chúng tôi hoan nghênh mọi đóng góp! Vui lòng đọc hướng dẫn đóng góp và gửi pull request.
+MIT License - xem file [LICENSE](LICENSE).
 
-## Giấy phép
+## Loi cam on
 
-Dự án này được cấp phép theo MIT License - xem file [LICENSE](LICENSE) để biết thêm chi tiết.
-
-## Lời cảm ơn
-
-- Xây dựng với [Bun](https://bun.sh/)
-- Powered by [Fastify](https://fastify.io/)
-- Benchmarked với [K6](https://k6.io/)
-- Monitored với [Grafana](https://grafana.com/)
+- Built with [Bun](https://bun.sh/)
+- Vector search: [Annoy.js](https://github.com/DanielKRing1/Annoy.js) (pure JS) va [hnswlib-node](https://github.com/yahoojapan/hnswlib-node) (C++)
+- MCP Protocol: [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol)
+- Protocol: [Model Context Protocol](https://modelcontextprotocol.io/)

@@ -888,26 +888,29 @@ DEBUG=semantic-cache* npm start
 
 ## Future Roadmap
 
-### Phase 2: Enhanced Features (Q2 2026)
+### Phase 2: Redis Production Backend (Q2 2026)
 
-- [ ] **TTL Support**: Time-based expiration cho entries
-- [ ] **Multi-modal**: Support images, audio embeddings
-- [ ] **Distributed Cache**: Redis/Valkey backend option
-- [ ] **GPU Acceleration**: CUDA support cho vector operations
+- [ ] **Redis Metadata Store**: Persist metadata across restarts
+- [ ] **Distributed Rate Limiting**: Redis-backed rate limiting for multi-instance deployments
+- [ ] **Exact-Match Offloading**: Move prompt hash index to Redis for O(1) distributed lookups
+- [ ] **TTL Management**: Redis EXPIRE for automatic cache lifecycle
+- [ ] **Horizontal Scalability**: Stateless cache nodes sharing Redis state
 
-### Phase 3: Enterprise Features (Q3 2026)
+### Phase 3: Benchmark Standards (Q3 2026)
 
-- [ ] **Multi-tenant**: Namespace isolation
-- [ ] **Authentication**: API key management
-- [ ] **Rate Limiting**: Query throttling
-- [ ] **Audit Logging**: Access logging
+- [ ] **Standard Datasets**: Integrate Qasper, LMSYS-Chat-1M, MS MARCO for evaluation
+- [ ] **Quality Metrics**: Recall@K, Semantic F1-Score, Model-as-Judge (G-Eval)
+- [ ] **Long-term Tracking**: CI pipeline with result comparison across releases
+- [ ] **A/B Threshold Tuning**: Shadow mode to compare similarity thresholds in production
+- [ ] **VectorDBBench Integration**: Standardized vector search benchmarking
 
 ### Phase 4: Advanced Optimization (Q4 2026)
 
-- [ ] **Product Quantization**: 10-20x compression
-- [ ] **Graph-based Search**: Knowledge graph integration
-- [ ] **Adaptive Thresholds**: Dynamic similarity tuning
-- [ ] **Prefetching**: Predictive cache warming
+- [ ] **Product Quantization**: 10-20x compression beyond INT8
+- [ ] **Entity-based Caching**: Cache at semantic entity level, not full prompt
+- [ ] **Adaptive Thresholds**: Dynamic similarity tuning per query category
+- [ ] **OpenTelemetry**: Distributed tracing and Prometheus metrics export
+- [ ] **Multi-modal**: Support image and audio embeddings
 
 ---
 
@@ -932,6 +935,13 @@ DEBUG=semantic-cache* npm start
 - **Milvus**: Vector database
 - **Pinecone**: Managed vector search
 - **Weaviate**: Vector search engine
+- **Serena** (oraios/serena): LLM coding agent toolkit with semantic code retrieval via LSP and MCP
+
+### Benchmarking Tools
+
+- [VectorDBBench](https://github.com/zilliztech/VectorDBBench) - Standardized vector DB benchmarking by Zilliz
+- [ANN-Benchmarks](https://ann-benchmarks.com/) - Benchmarking framework for approximate nearest neighbor algorithms
+- [MTEB](https://huggingface.co/spaces/mteb/leaderboard) - Massive Text Embedding Benchmark for embedding model evaluation
 
 ---
 

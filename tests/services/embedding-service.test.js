@@ -1,48 +1,29 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect } from 'bun:test';
 import EmbeddingService from '../../src/services/embedding-service.js';
 
 describe('EmbeddingService', () => {
-  let service;
+  const service = new EmbeddingService();
 
-  beforeEach(() => {
-    service = new EmbeddingService({
-      provider: 'mock',
-      apiKey: 'test-key'
-    });
+  test('should have dimension 384', () => {
+    expect(service.dimension).toBe(384);
   });
 
-  test('should generate embedding for text', async () => {
+  test('should generate 384-dim embedding', async () => {
     const result = await service.generate('Hello world');
-    
     expect(result).toBeDefined();
-    expect(Array.isArray(result.embedding)).toBe(true);
-    expect(result.embedding.length).toBe(1536);
-  });
+    expect(result.embedding.length).toBe(384);
+    expect(result.model).toBe('Xenova/all-MiniLM-L6-v2');
+  }, 30000);
 
-  test('should honor model override', async () => {
-    const result = await service.generate('Hello world', 'test-model');
-    
-    expect(result).toBeDefined();
-    expect(result.model).toBe('test-model');
-  });
+  test('should produce normalized vectors', async () => {
+    const result = await service.generate('Test input');
+    const magnitude = Math.sqrt(result.embedding.reduce((s, v) => s + v * v, 0));
+    expect(magnitude).toBeCloseTo(1.0, 1);
+  }, 30000);
 
-  test('should return null when provider not configured', async () => {
-    const unconfiguredService = new EmbeddingService({
-      provider: 'openai',
-      apiKey: null
-    });
-    
-    const result = await unconfiguredService.generate('Hello');
-    expect(result).toBeNull();
-  });
-
-  test('should check if service is configured', () => {
-    expect(service.isConfigured()).toBe(true);
-    
-    const unconfigured = new EmbeddingService({
-      provider: 'openai',
-      apiKey: null
-    });
-    expect(unconfigured.isConfigured()).toBe(false);
-  });
+  test('should produce different embeddings for different texts', async () => {
+    const a = await service.generate('Hello');
+    const b = await service.generate('Goodbye');
+    expect(a.embedding).not.toEqual(b.embedding);
+  }, 30000);
 });

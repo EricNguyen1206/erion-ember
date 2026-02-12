@@ -1,12 +1,16 @@
 /**
  * Metadata Store - Manages cache metadata with LRU eviction
+ * Uses O(1) LRU implementation with doubly-linked list
  */
 class MetadataStore {
   constructor(options = {}) {
     this.maxSize = options.maxSize || 100000;
-    this.metadata = new Map(); // id -> metadata
-    this.promptHashIndex = new Map(); // promptHash -> id
-    this.lruQueue = []; // Ordered list for LRU
+    this.metadata = new Map();
+    this.promptHashIndex = new Map();
+    
+    this.lruHead = null;
+    this.lruTail = null;
+    this.lruNodes = new Map();
   }
 
   /**
@@ -16,25 +20,20 @@ class MetadataStore {
    * @param {number} [ttl] - Time to live in seconds
    */
   set(id, data, ttl) {
-    // Check if we need to evict
     if (this.metadata.size >= this.maxSize && !this.metadata.has(id)) {
       this._evictLRU();
     }
     
-    // Update LRU queue
-    this._updateLRU(id);
+    this._touchLRU(id);
     
-    // Calculate expiration
     const expiresAt = ttl ? Date.now() + (ttl * 1000) : null;
 
-    // Store metadata
     this.metadata.set(id, {
       ...data,
       expiresAt,
       lastAccessed: Date.now()
     });
     
-    // Update prompt hash index
     if (data.promptHash) {
       this.promptHashIndex.set(data.promptHash, id);
     }
@@ -48,17 +47,14 @@ class MetadataStore {
   get(id) {
     const data = this.metadata.get(id);
     if (data) {
-      // Check expiration
       if (data.expiresAt && Date.now() > data.expiresAt) {
         this.delete(id);
         return undefined;
       }
 
-      // Update access time and LRU
       data.lastAccessed = Date.now();
       data.accessCount = (data.accessCount || 0) + 1;
-      this._updateLRU(id);
-      // Return a copy to prevent external modification
+      this._touchLRU(id);
       return { ...data };
     }
     return undefined;
@@ -74,16 +70,14 @@ class MetadataStore {
     if (id) {
       const data = this.metadata.get(id);
       if (data) {
-        // Check expiration
         if (data.expiresAt && Date.now() > data.expiresAt) {
           this.delete(id);
           return undefined;
         }
 
-        // Update access time and LRU
         data.lastAccessed = Date.now();
         data.accessCount = (data.accessCount || 0) + 1;
-        this._updateLRU(id);
+        this._touchLRU(id);
         return { ...data };
       }
     }
@@ -129,29 +123,52 @@ class MetadataStore {
   clear() {
     this.metadata.clear();
     this.promptHashIndex.clear();
-    this.lruQueue = [];
+    this.lruNodes.clear();
+    this.lruHead = null;
+    this.lruTail = null;
   }
 
   /**
-   * Update LRU queue
+   * Touch/move ID to most recently used position
    * @private
    */
-  _updateLRU(id) {
-    // Remove from current position
+  _touchLRU(id) {
     this._removeFromLRU(id);
-    // Add to end (most recently used)
-    this.lruQueue.push(id);
+    
+    const node = { id, prev: null, next: null };
+    this.lruNodes.set(id, node);
+    
+    if (!this.lruTail) {
+      this.lruHead = node;
+      this.lruTail = node;
+    } else {
+      node.prev = this.lruTail;
+      this.lruTail.next = node;
+      this.lruTail = node;
+    }
   }
 
   /**
-   * Remove from LRU queue
+   * Remove from LRU list
    * @private
    */
   _removeFromLRU(id) {
-    const index = this.lruQueue.indexOf(id);
-    if (index > -1) {
-      this.lruQueue.splice(index, 1);
+    const node = this.lruNodes.get(id);
+    if (!node) return;
+    
+    if (node.prev) {
+      node.prev.next = node.next;
+    } else {
+      this.lruHead = node.next;
     }
+    
+    if (node.next) {
+      node.next.prev = node.prev;
+    } else {
+      this.lruTail = node.prev;
+    }
+    
+    this.lruNodes.delete(id);
   }
 
   /**
@@ -159,9 +176,9 @@ class MetadataStore {
    * @private
    */
   _evictLRU() {
-    if (this.lruQueue.length === 0) return;
+    if (!this.lruHead) return;
     
-    const idToEvict = this.lruQueue[0]; // First = least recently used
+    const idToEvict = this.lruHead.id;
     this.delete(idToEvict);
   }
 }

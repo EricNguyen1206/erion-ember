@@ -4,9 +4,7 @@ import lz4js from 'lz4js';
  * LZ4 Compressor - Fast compression for text data
  */
 class Compressor {
-  constructor() {
-    this.compressionLevel = 1; // Fastest (Not configurable in lz4js, but kept for API compatibility)
-  }
+  constructor() {}
 
   /**
    * Compress string using LZ4

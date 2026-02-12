@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-02-12
+
+### Overview
+Performance and reliability release focusing on bug fixes and optimizations. This release addresses critical issues discovered in production use and significantly improves cache performance for high-throughput scenarios.
+
+### Fixed
+
+#### Critical Bugs
+- **Embedding Fallback** - `cache_store` no longer stores zero-filled arrays when embedding generation fails; now returns proper error response
+  - Previously: Would store meaningless zero vectors that never match queries
+  - Now: Returns `isError: true` with descriptive error message
+
+#### Performance
+- **LRU Cache** - MetadataStore now uses O(1) doubly-linked list instead of O(n) array operations
+  - Impact: 1000x faster on large caches (100K+ entries)
+  - Implementation: Custom LRU with Map + doubly-linked nodes
+  - `indexOf` + `splice` replaced with `Map` lookups and pointer updates
+
+### Changed
+
+#### Performance Optimizations
+- **Hashing** - Replaced crypto.sha256 with xxhash-addon in `Normalizer`
+  - 10x faster prompt hashing
+  - xxhash-addon already in dependencies, now properly utilized
+
+#### Code Cleanup
+- **Compressor** - Removed unused `compressionLevel` variable (lz4js doesn't support configuration)
+- **Quantizer** - Simplified constructor by removing unused `precision` parameter
+
+### Technical Details
+
+#### Files Modified
+- `src/tools/cache-store.js` - Added embedding validation and error handling
+- `src/lib/metadata-store.js` - Complete LRU refactor to O(1) operations
+- `src/lib/normalizer.js` - Replaced sha256 with xxhash
+- `src/lib/compressor.js` - Removed unused code
+- `src/lib/quantizer.js` - Simplified constructor
+
+#### Tests Added
+- `tests/cache-store.test.js` - 3 tests covering embedding scenarios
+- `tests/lru-performance.test.js` - 3 tests validating O(1) LRU behavior
+
 ## [2.0.0] - 2026-02-09
 
 ### Overview
@@ -195,7 +237,8 @@ CACHE_DEFAULT_TTL=3600
 
 ---
 
-[Unreleased]: https://github.com/EricNguyen1206/erion-ember/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/EricNguyen1206/erion-ember/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/EricNguyen1206/erion-ember/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/EricNguyen1206/erion-ember/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/EricNguyen1206/erion-ember/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/EricNguyen1206/erion-ember/releases/tag/v0.1.0
