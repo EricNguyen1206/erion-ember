@@ -15,15 +15,29 @@ services:
     environment:
       - NODE_ENV=production
       - OLLAMA_URL=http://host.docker.internal:11434
+      - REDIS_URL=redis://redis:6379
     volumes:
       # Mount cache directory for persistence
       - ./cache:/app/cache
     networks:
       - erion-network
     restart: unless-stopped
+    depends_on:
+      - redis
     # No healthcheck for stdio MCP server
     stdin_open: true
     tty: true
+
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: erion-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - erion-network
+    restart: unless-stopped
 
   # ============================================================================
   # MONITORING SERVICES (Optional with --profile monitoring)
@@ -72,4 +86,6 @@ networks:
 
 volumes:
   influxdb_data:
+    driver: local
+  redis_data:
     driver: local

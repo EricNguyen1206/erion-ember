@@ -17,20 +17,17 @@
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
     "@modelcontextprotocol/sdk": "^1.26.0",
-    "annoy.js": "^2.1.6",
-    "hnswlib-node": "^2.0.0",
+    "ioredis": "^5.3.2",
     "lz4js": "^0.2.0",
-    "xxhash-addon": "^2.0.0",
+    "xxhashjs": "^0.2.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "bun-types": "latest",
+    "ioredis-mock": "^8.9.0",
     "typescript": "^5.3.0"
   },
-  "trustedDependencies": [
-    "hnswlib-node",
-    "xxhash-addon"
-  ],
+  "trustedDependencies": [],
   "engines": {
     "node": ">=20.0.0"
   }
