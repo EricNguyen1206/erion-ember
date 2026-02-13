@@ -1,13 +1,26 @@
+import {
+  CacheMetadata,
+  MetadataStoreConfig,
+  MetadataStoreStats,
+  LRUNode,
+} from '../types/index.js';
+
 /**
  * Metadata Store - Manages cache metadata with LRU eviction
  * Uses O(1) LRU implementation with doubly-linked list
  */
-class MetadataStore {
-  constructor(options = {}) {
-    this.maxSize = options.maxSize || 100000;
+export class MetadataStore {
+  readonly maxSize: number;
+  private metadata: Map<string, CacheMetadata>;
+  private promptHashIndex: Map<string, string>;
+  private lruHead: LRUNode | null;
+  private lruTail: LRUNode | null;
+  private lruNodes: Map<string, LRUNode>;
+
+  constructor(options: MetadataStoreConfig = {}) {
+    this.maxSize = options.maxSize ?? 100000;
     this.metadata = new Map();
     this.promptHashIndex = new Map();
-    
     this.lruHead = null;
     this.lruTail = null;
     this.lruNodes = new Map();
@@ -15,25 +28,27 @@ class MetadataStore {
 
   /**
    * Store metadata
-   * @param {string} id - Entry ID
-   * @param {object} data - Metadata
-   * @param {number} [ttl] - Time to live in seconds
+   * @param id - Entry ID
+   * @param data - Metadata
+   * @param ttl - Time to live in seconds
    */
-  set(id, data, ttl) {
+  set(id: string, data: CacheMetadata, ttl?: number): void {
     if (this.metadata.size >= this.maxSize && !this.metadata.has(id)) {
       this._evictLRU();
     }
-    
-    this._touchLRU(id);
-    
-    const expiresAt = ttl ? Date.now() + (ttl * 1000) : null;
 
-    this.metadata.set(id, {
+    this._touchLRU(id);
+
+    const expiresAt = ttl ? Date.now() + ttl * 1000 : null;
+
+    const updatedData: CacheMetadata = {
       ...data,
-      expiresAt,
-      lastAccessed: Date.now()
-    });
-    
+      expiresAt: expiresAt ?? undefined,
+      lastAccessed: Date.now(),
+    };
+
+    this.metadata.set(id, updatedData);
+
     if (data.promptHash) {
       this.promptHashIndex.set(data.promptHash, id);
     }
@@ -41,10 +56,10 @@ class MetadataStore {
 
   /**
    * Get metadata by ID
-   * @param {string} id - Entry ID
-   * @returns {object|undefined}
+   * @param id - Entry ID
+   * @returns Metadata or undefined if not found/expired
    */
-  get(id) {
+  get(id: string): CacheMetadata | undefined {
     const data = this.metadata.get(id);
     if (data) {
       if (data.expiresAt && Date.now() > data.expiresAt) {
@@ -52,20 +67,24 @@ class MetadataStore {
         return undefined;
       }
 
-      data.lastAccessed = Date.now();
-      data.accessCount = (data.accessCount || 0) + 1;
+      const updatedData: CacheMetadata = {
+        ...data,
+        lastAccessed: Date.now(),
+        accessCount: (data.accessCount || 0) + 1,
+      };
+      this.metadata.set(id, updatedData);
       this._touchLRU(id);
-      return { ...data };
+      return updatedData;
     }
     return undefined;
   }
 
   /**
    * Find metadata by prompt hash
-   * @param {string} promptHash - Hash of normalized prompt
-   * @returns {object|undefined}
+   * @param promptHash - Hash of normalized prompt
+   * @returns Metadata or undefined if not found/expired
    */
-  findByPromptHash(promptHash) {
+  findByPromptHash(promptHash: string): CacheMetadata | undefined {
     const id = this.promptHashIndex.get(promptHash);
     if (id) {
       const data = this.metadata.get(id);
@@ -75,10 +94,14 @@ class MetadataStore {
           return undefined;
         }
 
-        data.lastAccessed = Date.now();
-        data.accessCount = (data.accessCount || 0) + 1;
+        const updatedData: CacheMetadata = {
+          ...data,
+          lastAccessed: Date.now(),
+          accessCount: (data.accessCount || 0) + 1,
+        };
+        this.metadata.set(id, updatedData);
         this._touchLRU(id);
-        return { ...data };
+        return updatedData;
       }
     }
     return undefined;
@@ -86,10 +109,10 @@ class MetadataStore {
 
   /**
    * Delete metadata
-   * @param {string} id - Entry ID
-   * @returns {boolean}
+   * @param id - Entry ID
+   * @returns Whether deletion was successful
    */
-  delete(id) {
+  delete(id: string): boolean {
     const data = this.metadata.get(id);
     if (data) {
       this.promptHashIndex.delete(data.promptHash);
@@ -102,25 +125,26 @@ class MetadataStore {
 
   /**
    * Get store statistics
-   * @returns {object}
+   * @returns Store statistics
    */
-  stats() {
+  stats(): MetadataStoreStats {
     let totalCompressedSize = 0;
     for (const data of this.metadata.values()) {
-      totalCompressedSize += data.compressedSize || 0;
+      // Support both compressedResponseSize (standard) and compressedSize (legacy/test compatibility)
+      totalCompressedSize += (data.compressedResponseSize || data.compressedSize || 0);
     }
-    
+
     return {
       totalEntries: this.metadata.size,
       totalCompressedSize,
-      memoryLimit: this.maxSize
+      memoryLimit: this.maxSize,
     };
   }
 
   /**
    * Clear all data
    */
-  clear() {
+  clear(): void {
     this.metadata.clear();
     this.promptHashIndex.clear();
     this.lruNodes.clear();
@@ -129,15 +153,31 @@ class MetadataStore {
   }
 
   /**
+   * Iterate over all metadata entries
+   * @yields Cache metadata entries
+   */
+  *values(): IterableIterator<CacheMetadata> {
+    yield* this.metadata.values();
+  }
+
+  /**
+   * Iterate over all metadata entries with IDs
+   * @yields [id, metadata] tuples
+   */
+  *entries(): IterableIterator<[string, CacheMetadata]> {
+    yield* this.metadata.entries();
+  }
+
+  /**
    * Touch/move ID to most recently used position
    * @private
    */
-  _touchLRU(id) {
+  private _touchLRU(id: string): void {
     this._removeFromLRU(id);
-    
-    const node = { id, prev: null, next: null };
+
+    const node: LRUNode = { id, prev: null, next: null };
     this.lruNodes.set(id, node);
-    
+
     if (!this.lruTail) {
       this.lruHead = node;
       this.lruTail = node;
@@ -152,22 +192,22 @@ class MetadataStore {
    * Remove from LRU list
    * @private
    */
-  _removeFromLRU(id) {
+  private _removeFromLRU(id: string): void {
     const node = this.lruNodes.get(id);
     if (!node) return;
-    
+
     if (node.prev) {
       node.prev.next = node.next;
     } else {
       this.lruHead = node.next;
     }
-    
+
     if (node.next) {
       node.next.prev = node.prev;
     } else {
       this.lruTail = node.prev;
     }
-    
+
     this.lruNodes.delete(id);
   }
 
@@ -175,9 +215,9 @@ class MetadataStore {
    * Evict least recently used entry
    * @private
    */
-  _evictLRU() {
+  private _evictLRU(): void {
     if (!this.lruHead) return;
-    
+
     const idToEvict = this.lruHead.id;
     this.delete(idToEvict);
   }

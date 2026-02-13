@@ -37,4 +37,4 @@ ENV NODE_ENV=production
 # Health check removed - stdio transport doesn't use HTTP
 
 # Start MCP server
-CMD ["bun", "run", "src/mcp-server.js"]
+CMD ["bun", "run", "src/mcp-server.ts"]

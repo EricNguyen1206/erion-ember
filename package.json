@@ -2,11 +2,13 @@
   "name": "erion-ember",
   "version": "2.1.0",
   "description": "LLM Semantic Cache MCP Server with Local Embeddings",
-  "main": "src/mcp-server.js",
+  "main": "src/mcp-server.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/mcp-server.js",
-    "start": "bun run src/mcp-server.js",
+    "dev": "bun run --watch src/mcp-server.ts",
+    "start": "bun run src/mcp-server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "test": "bun test tests/",
     "test:watch": "bun test --watch tests/",
     "docker:build": "docker build -t erion-ember .",
@@ -22,7 +24,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^5.3.0"
   },
   "trustedDependencies": [
     "hnswlib-node",

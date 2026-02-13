@@ -1,4 +1,4 @@
-const Fastify = require('fastify');
+import Fastify from 'fastify';
 
 const fastify = Fastify();
 
