@@ -19,36 +19,38 @@ export async function handleGenerateEmbedding(
   embeddingService: EmbeddingService
 ): Promise<ToolResult> {
   const { text } = generateEmbeddingSchema.parse(params as unknown);
-  const result = await embeddingService.generate(text);
 
-  if (!result) {
+  try {
+    const result = await embeddingService.generate(text);
+
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify({ error: 'Failed to generate embedding' }, null, 2),
+          text: JSON.stringify(
+            {
+              embedding: result.embedding,
+              model: result.model,
+              dimension: result.embedding.length,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({ error: `Failed to generate embedding: ${errorMessage}` }, null, 2),
         },
       ],
       isError: true,
     };
   }
-
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(
-          {
-            embedding: result.embedding,
-            model: result.model,
-            dimension: result.embedding.length,
-          },
-          null,
-          2
-        ),
-      },
-    ],
-  };
 }
 
 export default handleGenerateEmbedding;

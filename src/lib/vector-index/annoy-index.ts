@@ -67,9 +67,9 @@ export class AnnoyVectorIndex extends VectorIndex {
     const results = this.annoy.get(queryVector, k);
 
     return results.map((result) => {
-      // annoy.js may return {d: id, v: vector} or similar format
-      const resultId = result.d !== undefined ? result.d : result.data;
-      const resultVector = result.v !== undefined ? result.v : result.vector;
+      // annoy.js returns {d: id, v: vector} format
+      const resultId = result.d ?? result.data ?? 0;
+      const resultVector = result.v ?? result.vector;
 
       if (!resultVector || !Array.isArray(resultVector)) {
         throw new Error(
@@ -89,7 +89,7 @@ export class AnnoyVectorIndex extends VectorIndex {
   }
 
   /**
-   * Calculate cosine distance between two vectors
+   * Calculate distance between two vectors based on the configured metric
    * @private
    */
   private _calculateDistance(vec1: number[], vec2: number[]): number {
@@ -104,9 +104,19 @@ export class AnnoyVectorIndex extends VectorIndex {
         norm2 += vec2[i] * vec2[i];
       }
 
+      if (norm1 === 0 || norm2 === 0) return 1;
       const similarity = dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
       return 1 - similarity;
+    } else if (this.space === 'ip') {
+      // Inner product: larger dot product = more similar
+      // Return negative dot product so smaller distance = more similar
+      let dotProduct = 0;
+      for (let i = 0; i < vec1.length; i++) {
+        dotProduct += vec1[i] * vec2[i];
+      }
+      return -dotProduct;
     } else {
+      // L2 (Euclidean) distance
       let sum = 0;
       for (let i = 0; i < vec1.length; i++) {
         const diff = vec1[i] - vec2[i];

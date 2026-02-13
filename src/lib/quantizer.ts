@@ -2,6 +2,21 @@
  * Vector Quantizer - Converts FP32 vectors to INT8 for memory efficiency
  */
 export class Quantizer {
+
+  private readonly scale: number;
+
+  /**
+   * Create a Quantizer
+   * @param precision - Quantization precision (only 'int8' supported)
+   */
+  constructor(precision: 'int8' = 'int8') {
+    if (precision !== 'int8') {
+      throw new TypeError(`Unsupported precision: ${precision}. Only 'int8' is supported.`);
+    }
+
+    this.scale = 127.5;
+  }
+
   /**
    * Quantize FP32 vector to INT8
    * Maps [-1, 1] to [0, 255]
@@ -11,7 +26,7 @@ export class Quantizer {
   quantize(vector: number[]): number[] {
     return vector.map((v) => {
       const clamped = Math.max(-1, Math.min(1, v));
-      return Math.round((clamped + 1) * 127.5);
+      return Math.round((clamped + 1) * this.scale);
     });
   }
 
@@ -22,7 +37,7 @@ export class Quantizer {
    * @returns Array of floats in range [-1, 1]
    */
   dequantize(quantized: number[]): number[] {
-    return quantized.map((v) => v / 127.5 - 1);
+    return quantized.map((v) => v / this.scale - 1);
   }
 }
 

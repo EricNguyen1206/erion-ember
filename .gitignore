@@ -140,4 +140,6 @@ vite.config.ts.timestamp-*
 
 .opencode/
 docs/plans/
+.agent/
+.agents/
 AGENTS.md

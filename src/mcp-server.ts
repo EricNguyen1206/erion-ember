@@ -1,7 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
-  CallToolRequest,
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
@@ -174,25 +173,26 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 // Handle tool calls
-server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+  const params = (args ?? {}) as Record<string, unknown>;
 
   try {
     switch (name) {
       case 'ai_complete':
-        return await handleAiComplete(args, cache);
+        return await handleAiComplete(params, cache);
 
       case 'cache_check':
-        return await handleCacheCheck(args, cache);
+        return await handleCacheCheck(params, cache);
 
       case 'cache_store':
-        return await handleCacheStore(args, cache, embeddingService);
+        return await handleCacheStore(params, cache, embeddingService);
 
       case 'cache_stats':
-        return await handleCacheStats(args, cache);
+        return await handleCacheStats(params, cache);
 
       case 'generate_embedding':
-        return await handleGenerateEmbedding(args, embeddingService);
+        return await handleGenerateEmbedding(params, embeddingService);
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -204,7 +204,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: JSON.stringify(
             {
               error: err.message,

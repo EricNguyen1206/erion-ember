@@ -42,8 +42,10 @@ declare module 'annoy.js' {
   }
 
   export interface AnnoyResult {
-    vector: number[];
-    data: number;
+    v: number[];
+    d: number;
+    vector?: number[];
+    data?: number;
   }
 
   export default class Annoy {
@@ -56,6 +58,6 @@ declare module 'annoy.js' {
 }
 
 declare module 'lz4js' {
-  export function compress(data: Buffer | Uint8Array): Uint8Array;
-  export function decompress(data: Buffer | Uint8Array): Uint8Array;
+  export function compress(data: Buffer | Uint8Array, maxSize?: number): Uint8Array;
+  export function decompress(data: Buffer | Uint8Array, maxSize?: number): Uint8Array;
 }
