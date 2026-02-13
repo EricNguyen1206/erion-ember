@@ -37,8 +37,8 @@ export class HNSWVectorIndex extends VectorIndex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const HierarchicalNSWClass = (hnswlib as any).HierarchicalNSW;
     this.index = new HierarchicalNSWClass(space, dim);
-    this.index.initIndex(maxElements, this.M, this.efConstruction);
-    this.index.setEf(this.ef);
+    this.index!.initIndex(maxElements, this.M, this.efConstruction);
+    this.index!.setEf(this.ef);
   }
 
   /**
@@ -98,8 +98,8 @@ export class HNSWVectorIndex extends VectorIndex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const HierarchicalNSWClass = (hnswlib as any).HierarchicalNSW;
     this.index = new HierarchicalNSWClass(this.space, this.dim);
-    this.index.readIndexSync(path);
-    this.currentId = this.index.getCurrentCount();
+    this.index!.readIndexSync(path);
+    this.currentId = this.index!.getCurrentCount();
     this.destroyed = false;
   }
 

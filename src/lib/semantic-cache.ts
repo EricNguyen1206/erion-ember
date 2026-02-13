@@ -370,7 +370,15 @@ export class SemanticCache {
       this.metadataStore.set(entry.id, restoredEntry, ttl);
     }
 
-    this._statistics = metadata.stats;
+    // Merge with defaults to handle older metadata missing fields
+    const defaultStats: InternalStatistics = {
+      hits: 0,
+      misses: 0,
+      totalQueries: 0,
+      savedTokens: 0,
+      savedUsd: 0,
+    };
+    this._statistics = { ...defaultStats, ...metadata.stats };
   }
 
   /**

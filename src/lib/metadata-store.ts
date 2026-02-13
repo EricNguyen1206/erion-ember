@@ -39,7 +39,7 @@ export class MetadataStore {
 
     this._touchLRU(id);
 
-    const expiresAt = ttl ? Date.now() + ttl * 1000 : null;
+    const expiresAt = ttl != null ? Date.now() + ttl * 1000 : null;
 
     const updatedData: CacheMetadata = {
       ...data,
@@ -131,7 +131,7 @@ export class MetadataStore {
     let totalCompressedSize = 0;
     for (const data of this.metadata.values()) {
       // Support both compressedResponseSize (standard) and compressedSize (legacy/test compatibility)
-      totalCompressedSize += (data.compressedResponseSize || data.compressedSize || 0);
+      totalCompressedSize += (data.compressedResponseSize ?? data.compressedSize ?? 0);
     }
 
     return {

@@ -57,6 +57,8 @@ export interface CacheMetadata {
   compressedPromptSize: number;
   /** Compressed response size in bytes */
   compressedResponseSize: number;
+  /** @deprecated Legacy field — use compressedResponseSize instead */
+  compressedSize?: number;
   /** Timestamp when entry was created */
   createdAt: number;
   /** Timestamp of last access */
@@ -170,6 +172,7 @@ export interface ToolContent {
 export interface ToolResult {
   content: ToolContent[];
   isError?: boolean;
+  [key: string]: unknown;
 }
 
 export interface AiCompleteParams {
