@@ -68,7 +68,10 @@ export class AnnoyVectorIndex extends VectorIndex {
 
     return results.map((result) => {
       // annoy.js returns {d: id, v: vector} format
-      const resultId = result.d ?? result.data ?? 0;
+      const resultId = result.d ?? result.data;
+      if (resultId === undefined) {
+        throw new Error('Annoy.js result missing id; cannot map search result safely.');
+      }
       const resultVector = result.v ?? result.vector;
 
       if (!resultVector || !Array.isArray(resultVector)) {
