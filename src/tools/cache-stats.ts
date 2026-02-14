@@ -12,7 +12,7 @@ export async function handleCacheStats(
   _params: Record<string, unknown>,
   cache: SemanticCache
 ): Promise<ToolResult> {
-  const stats = cache.getStats();
+  const stats = await cache.getStats();
 
   return {
     content: [
