@@ -1,4 +1,61 @@
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import SemanticCache from '../src/lib/semantic-cache.js';
+
+class MockRedisStore {
+  constructor() {
+    this.data = new Map();
+    this.index = [];
+    this.expirations = new Map();
+  }
+  async createIndex(dim) {}
+  async add(id, vector, metadata) {
+    this.data.set(id, metadata);
+    this.index.push({ id, vector });
+    if (metadata.expiresAt) {
+      this.expirations.set(id, metadata.expiresAt);
+    }
+  }
+  async get(id) {
+    if (this.expirations.has(id)) {
+        if (Date.now() > this.expirations.get(id)) {
+            this.data.delete(id);
+            this.expirations.delete(id);
+            // remove from index? lazy removal is fine for get(id) return null
+            return null;
+        }
+    }
+    return this.data.get(id) || null;
+  }
+  async findByPromptHash(hash) {
+    // hash is ID in SemanticCache implementation now
+    return this.get(hash);
+  }
+  async search(vector, k) {
+    // Return all items that are not expired
+    // Filter expired
+    const validItems = [];
+    for (const item of this.index) {
+        if (this.expirations.has(item.id)) {
+             if (Date.now() > this.expirations.get(item.id)) {
+                 continue;
+             }
+        }
+        validItems.push({ id: item.id, distance: 0.1 });
+    }
+    return validItems.slice(0, k);
+  }
+  async delete(id) {
+    this.expirations.delete(id);
+    return this.data.delete(id);
+  }
+  async clear() {
+    this.data.clear();
+    this.index = [];
+    this.expirations.clear();
+  }
+  async getStats() { return { totalEntries: this.data.size }; }
+  async disconnect() {}
+}
 
 describe('TTL Functionality', () => {
   let cache;
@@ -10,11 +67,13 @@ describe('TTL Functionality', () => {
       maxElements: 1000,
       similarityThreshold: 0.85,
       defaultTTL: 1 // 1 second default
+    }, {
+      redisStore: new MockRedisStore()
     });
   });
 
-  afterEach(() => {
-    cache.destroy();
+  afterEach(async () => {
+    await cache.destroy();
   });
 
   test('should expire exact match after TTL', async () => {

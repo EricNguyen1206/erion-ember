@@ -144,7 +144,7 @@ export interface VectorIndexConfig {
 
 export interface SearchResult {
   /** Item ID */
-  id: number;
+  id: string;
   /** Distance from query (lower is more similar) */
   distance: number;
 }

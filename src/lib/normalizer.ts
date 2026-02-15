@@ -1,13 +1,13 @@
-import { XXHash64 } from 'xxhash-addon';
+import xxhash from 'xxhashjs';
 
 /**
  * Prompt Normalizer - Normalizes text for deduplication
  */
 export class Normalizer {
-  private seed: Buffer;
+  private seed: number;
 
   constructor() {
-    this.seed = Buffer.alloc(8, 0);
+    this.seed = 0;
   }
 
   /**
@@ -28,16 +28,16 @@ export class Normalizer {
 
   /**
    * Generate hash for deduplication
-   * Uses xxhash for speed (10x faster than sha256)
+   * Uses xxhashjs for speed
    * @param text - Input text (will be normalized if not already)
    * @param alreadyNormalized - If true, assumes text is already normalized
    * @returns Hash string
    */
   hash(text: string, alreadyNormalized: boolean = false): string {
     const normalized = alreadyNormalized ? text : this.normalize(text);
-    const hasher = new XXHash64(this.seed);
-    hasher.update(Buffer.from(normalized, 'utf8'));
-    return hasher.digest().toString('hex');
+    // xxhashjs h64 uses seed 0 by default
+    const hash = xxhash.h64(normalized, this.seed);
+    return hash.toString(16);
   }
 }
 
