@@ -6,13 +6,11 @@ import {
   CacheMetadata,
   CacheStats,
   InternalStatistics,
-  SearchResult,
 } from '../types/index.js';
-import { createVectorIndex, VectorIndex } from './vector-index/factory.js';
+import { RedisVectorStore } from './redis-vector-store.js';
 import Quantizer from './quantizer.js';
 import Compressor from './compressor.js';
 import Normalizer from './normalizer.js';
-import MetadataStore from './metadata-store.js';
 
 /**
  * Semantic Cache - High-performance cache for LLM queries with vector search
@@ -21,7 +19,7 @@ export interface SemanticCacheDependencies {
   quantizer?: Quantizer;
   compressor?: Compressor;
   normalizer?: Normalizer;
-  metadataStore?: MetadataStore;
+  redisStore?: RedisVectorStore;
 }
 
 export class SemanticCache {
@@ -34,10 +32,9 @@ export class SemanticCache {
   private quantizer: Quantizer;
   private compressor: Compressor;
   private normalizer: Normalizer;
-  private metadataStore: MetadataStore;
+  private redisStore: RedisVectorStore;
   private _statistics: InternalStatistics;
-  private index: VectorIndex | null = null;
-  private indexPromise: Promise<VectorIndex> | null = null;
+  private storePromise: Promise<void> | null = null;
 
   constructor(options: CacheConfig = {}, deps: SemanticCacheDependencies = {}) {
     this.dim = options.dim ?? 1536;
@@ -49,7 +46,7 @@ export class SemanticCache {
     this.quantizer = deps.quantizer ?? new Quantizer();
     this.compressor = deps.compressor ?? new Compressor();
     this.normalizer = deps.normalizer ?? new Normalizer();
-    this.metadataStore = deps.metadataStore ?? new MetadataStore({ maxSize: this.maxElements });
+    this.redisStore = deps.redisStore ?? new RedisVectorStore();
 
     this._statistics = {
       hits: 0,
@@ -59,29 +56,26 @@ export class SemanticCache {
       savedUsd: 0,
     };
 
-    this.indexPromise = this._initIndex();
-  }
-
-  /**
-   * Initialize vector index asynchronously
-   * @private
-   */
-  private async _initIndex(): Promise<VectorIndex> {
-    this.index = await createVectorIndex({
-      dim: this.dim,
-      maxElements: this.maxElements,
-      space: 'cosine',
+    this.storePromise = this._initStore().catch(err => {
+      console.error('Failed to initialize Redis Vector Store:', err);
     });
-    return this.index;
   }
 
   /**
-   * Ensure index is initialized
+   * Initialize vector store asynchronously
    * @private
    */
-  private async _ensureIndex(): Promise<void> {
-    if (!this.index && this.indexPromise) {
-      await this.indexPromise;
+  private async _initStore(): Promise<void> {
+    await this.redisStore.createIndex(this.dim);
+  }
+
+  /**
+   * Ensure store is initialized
+   * @private
+   */
+  private async _ensureStore(): Promise<void> {
+    if (this.storePromise) {
+      await this.storePromise;
     }
   }
 
@@ -107,7 +101,7 @@ export class SemanticCache {
     embedding: number[] | null = null,
     options: QueryOptions = {}
   ): Promise<CacheResult | null> {
-    await this._ensureIndex();
+    await this._ensureStore();
 
     this._statistics.totalQueries++;
     const minSimilarity = options.minSimilarity ?? this.similarityThreshold;
@@ -116,7 +110,7 @@ export class SemanticCache {
     const promptHash = this.normalizer.hash(normalized, true);
 
     // Check exact match first
-    const exactMatch = this.metadataStore.findByPromptHash(promptHash);
+    const exactMatch = await this.redisStore.findByPromptHash(promptHash);
     if (exactMatch) {
       this._statistics.hits++;
       const response = this._decompressResponse(exactMatch);
@@ -137,46 +131,29 @@ export class SemanticCache {
 
     // Search similar vectors
     const quantizedQuery = this.quantizer.quantize(embedding);
-    const baseK = 5;
-    const maxK = Math.min(this.maxElements, 50);
-    let k = Math.min(baseK, this.maxElements);
-    const inspected = new Set<number>();
+    // Use larger K to reduce round trips, assuming network latency > compute
+    const searchK = 20;
 
-    // Find best match above threshold
-    while (k > 0 && this.index) {
-      const searchResults = this.index.search(quantizedQuery, k);
-      let staleCandidate = false;
+    const searchResults = await this.redisStore.search(quantizedQuery, searchK);
 
-      for (const result of searchResults) {
-        if (inspected.has(result.id)) {
-          continue;
-        }
-        inspected.add(result.id);
+    for (const result of searchResults) {
+      const similarity = 1 - result.distance;
 
-        const similarity = 1 - result.distance;
-
-        if (similarity >= minSimilarity) {
-          const metadata = this.metadataStore.get(result.id.toString());
-          if (metadata) {
-            this._statistics.hits++;
-            const response = this._decompressResponse(metadata);
-            return {
-              response,
-              similarity,
-              isExactMatch: false,
-              cachedAt: new Date(metadata.createdAt),
-              metadata,
-            };
-          }
-          staleCandidate = true;
+      if (similarity >= minSimilarity) {
+        // Fetch full metadata
+        const metadata = await this.redisStore.get(result.id);
+        if (metadata) {
+          this._statistics.hits++;
+          const response = this._decompressResponse(metadata);
+          return {
+            response,
+            similarity,
+            isExactMatch: false,
+            cachedAt: new Date(metadata.createdAt),
+            metadata,
+          };
         }
       }
-
-      if (!staleCandidate || k >= maxK || searchResults.length < k) {
-        break;
-      }
-
-      k = Math.min(maxK, k + baseK);
     }
 
     this._statistics.misses++;
@@ -196,11 +173,7 @@ export class SemanticCache {
     embedding: number[],
     options: CacheOptions = {}
   ): Promise<void> {
-    await this._ensureIndex();
-
-    if (!this.index) {
-      throw new Error('Vector index not initialized');
-    }
+    await this._ensureStore();
 
     const normalized = this.normalizer.normalize(prompt);
     const promptHash = this.normalizer.hash(normalized, true);
@@ -210,12 +183,13 @@ export class SemanticCache {
 
     const quantizedVector = this.quantizer.quantize(embedding);
 
-    const vectorId = this.index.addItem(quantizedVector);
+    // Use promptHash as ID
+    const id = promptHash;
+    const now = Date.now();
 
-    const id = vectorId.toString();
     const metadata: CacheMetadata = {
       id,
-      vectorId,
+      vectorId: 0,
       promptHash,
       normalizedPrompt: normalized,
       compressedPrompt,
@@ -224,13 +198,18 @@ export class SemanticCache {
       originalResponseSize: Buffer.byteLength(response, 'utf8'),
       compressedPromptSize: compressedPrompt.length,
       compressedResponseSize: compressedResponse.length,
-      createdAt: Date.now(),
-      lastAccessed: Date.now(),
+      createdAt: now,
+      lastAccessed: now,
       accessCount: 0,
     };
 
-    const ttl = options.ttl ?? this.defaultTTL;
-    this.metadataStore.set(id, metadata, ttl);
+    if (options.ttl) {
+        metadata.expiresAt = now + options.ttl * 1000;
+    } else {
+        metadata.expiresAt = now + this.defaultTTL * 1000;
+    }
+
+    await this.redisStore.add(id, quantizedVector, metadata);
   }
 
   /**
@@ -238,23 +217,18 @@ export class SemanticCache {
    * @param prompt - Prompt to delete
    * @returns Whether deletion was successful
    */
-  delete(prompt: string): boolean {
+  async delete(prompt: string): Promise<boolean> {
     const normalized = this.normalizer.normalize(prompt);
     const promptHash = this.normalizer.hash(normalized, true);
-    const metadata = this.metadataStore.findByPromptHash(promptHash);
-
-    if (metadata) {
-      return this.metadataStore.delete(metadata.id);
-    }
-    return false;
+    return await this.redisStore.delete(promptHash);
   }
 
   /**
    * Get cache statistics
    * @returns Cache statistics object
    */
-  getStats(): CacheStats {
-    const storeStats = this.metadataStore.stats();
+  async getStats(): Promise<CacheStats> {
+    const storeStats = await this.redisStore.getStats();
     const hitRate =
       this._statistics.totalQueries > 0
         ? this._statistics.hits / this._statistics.totalQueries
@@ -263,11 +237,11 @@ export class SemanticCache {
     return {
       totalEntries: storeStats.totalEntries,
       memoryUsage: {
-        vectors: storeStats.totalEntries * this.dim,
-        metadata: storeStats.totalCompressedSize,
-        total: storeStats.totalEntries * this.dim + storeStats.totalCompressedSize,
+        vectors: storeStats.totalEntries * this.dim * 4,
+        metadata: 0,
+        total: 0,
       },
-      compressionRatio: this._calculateCompressionRatio(),
+      compressionRatio: '0.00',
       cacheHits: this._statistics.hits,
       cacheMisses: this._statistics.misses,
       hitRate: hitRate.toFixed(4),
@@ -281,114 +255,16 @@ export class SemanticCache {
    * Clear all cache entries
    */
   async clear(): Promise<void> {
-    this.metadataStore.clear();
-    this.index = await createVectorIndex({
-      dim: this.dim,
-      maxElements: this.maxElements,
-      space: 'cosine',
-    });
+    await this.redisStore.clear();
+    await this.redisStore.createIndex(this.dim);
     this._statistics = { hits: 0, misses: 0, totalQueries: 0, savedTokens: 0, savedUsd: 0 };
-  }
-
-  /**
-   * Save cache to disk
-   * @param path - Directory path
-   */
-  async save(path: string): Promise<void> {
-    await this._ensureIndex();
-
-    if (!this.index) {
-      throw new Error('Vector index not initialized');
-    }
-
-    const fs = await import('fs/promises');
-
-    await this.index.save(`${path}/index.bin`);
-
-    const store = Array.from(this.metadataStore.entries()).map(([id, data]) => ({
-      ...data,
-      compressedPrompt: data.compressedPrompt.toString('base64'),
-      compressedResponse: data.compressedResponse.toString('base64'),
-    }));
-
-    const metadata = {
-      stats: this._statistics,
-      store,
-      config: {
-        dim: this.dim,
-        maxElements: this.maxElements,
-        similarityThreshold: this.similarityThreshold,
-      },
-    };
-    await fs.writeFile(`${path}/metadata.json`, JSON.stringify(metadata, null, 2));
-  }
-
-  /**
-   * Load cache from disk
-   * @param path - Directory path
-   */
-  async load(path: string): Promise<void> {
-    await this._ensureIndex();
-
-    if (!this.index) {
-      throw new Error('Vector index not initialized');
-    }
-
-    const fs = await import('fs/promises');
-
-    await this.index.load(`${path}/index.bin`);
-
-    const data = await fs.readFile(`${path}/metadata.json`, 'utf8');
-    const metadata: {
-      stats: InternalStatistics;
-      store: Array<CacheMetadata & { compressedPrompt: string; compressedResponse: string }>;
-      config: CacheConfig;
-    } = JSON.parse(data);
-
-    this.metadataStore.clear();
-    const now = Date.now();
-    for (const entry of metadata.store) {
-      if (entry.expiresAt && entry.expiresAt <= now) {
-        continue;
-      }
-
-      let ttl: number | undefined;
-      if (entry.expiresAt) {
-        const remainingMs = entry.expiresAt - now;
-        if (remainingMs <= 0) {
-          continue;
-        }
-        ttl = Math.ceil(remainingMs / 1000);
-      }
-
-      const restoredEntry: CacheMetadata = {
-        ...entry,
-        compressedPrompt: Buffer.from(entry.compressedPrompt, 'base64'),
-        compressedResponse: Buffer.from(entry.compressedResponse, 'base64'),
-      };
-
-      this.metadataStore.set(entry.id, restoredEntry, ttl);
-    }
-
-    // Merge with defaults to handle older metadata missing fields
-    const defaultStats: InternalStatistics = {
-      hits: 0,
-      misses: 0,
-      totalQueries: 0,
-      savedTokens: 0,
-      savedUsd: 0,
-    };
-    this._statistics = { ...defaultStats, ...metadata.stats };
   }
 
   /**
    * Destroy cache and free resources
    */
-  destroy(): void {
-    if (this.index) {
-      this.index.destroy();
-    }
-    this.metadataStore.clear();
+  async destroy(): Promise<void> {
+    await this.redisStore.disconnect();
   }
 
   /**
@@ -400,22 +276,6 @@ export class SemanticCache {
       metadata.compressedResponse,
       metadata.originalResponseSize
     );
-  }
-
-  /**
-   * Calculate overall compression ratio
-   * @private
-   */
-  private _calculateCompressionRatio(): string {
-    let totalOriginal = 0;
-    let totalCompressed = 0;
-
-    for (const data of this.metadataStore.values()) {
-      totalOriginal += data.originalResponseSize;
-      totalCompressed += data.compressedResponseSize;
-    }
-
-    return totalOriginal > 0 ? (totalCompressed / totalOriginal).toFixed(2) : '0';
   }
 }
 

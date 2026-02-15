@@ -227,14 +227,14 @@ async function main(): Promise<void> {
   // Graceful shutdown
   process.on('SIGINT', async () => {
     console.error('\n🔄 Shutting down gracefully...');
-    cache.destroy();
+    await cache.destroy();
     await server.close();
     process.exit(0);
   });
 
   process.on('SIGTERM', async () => {
     console.error('\n🔄 Shutting down gracefully...');
-    cache.destroy();
+    await cache.destroy();
     await server.close();
     process.exit(0);
   });
