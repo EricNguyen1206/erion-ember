@@ -28,3 +28,4 @@ Thumbs.db
 
 # Node.js remnants (ignore if exists)
 node_modules/
+.goenv/
