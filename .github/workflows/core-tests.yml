@@ -1,58 +1,44 @@
-name: MCP Core Tests
+name: Go Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'bun.lock'
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
       - 'Dockerfile'
       - '.github/workflows/core-tests.yml'
   pull_request:
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'bun.lock'
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
       - 'Dockerfile'
       - '.github/workflows/core-tests.yml'
 
 jobs:
   test:
+    name: Test & Build
     runs-on: ubuntu-latest
-    env:
-      NODE_ENV: test
-      VECTOR_INDEX_BACKEND: annoy
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
+      - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
 
-    - name: Install node-gyp globally
-      run: npm install -g node-gyp
-    
-    - name: Install dependencies
-      run: bun install
-    
-    - name: Run tests
-      run: |
-        if [ -d "tests" ] && [ "$(ls -A tests 2>/dev/null)" ]; then
-          bun test
-        else
-          echo "No unit tests found, skipping..."
-        fi
-    
-    - name: Build Docker image
-      run: docker build -t erion-ember-test .
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -race ./...
+
+      - name: Build binary
+        run: go build -ldflags="-s -w" -o /tmp/erion-ember ./cmd/server/
+
+      - name: Build Docker image
+        run: docker build -t erion-ember-test .
