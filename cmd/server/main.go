@@ -28,15 +28,25 @@ func main() {
 		"max_elements", cfg.MaxElements,
 	)
 
-	// Embedding: ZeroEmbedder until ONNX is configured via MODEL_DIR.
-	// Exact hash-match path (fast path) works fully without ONNX.
-	// Semantic similarity search requires ONNX model.
-	var embedder embedding.Embedder = embedding.NewZeroEmbedder(cfg.Dim)
+	// Embedding: load ONNX embedder if MODEL_DIR is set, else ZeroEmbedder.
+	// Fast path (xxhash exact match) always works without ONNX.
+	// Semantic similarity search requires MODEL_DIR + an ONNX model file.
+	var embedder embedding.Embedder
 	if modelDir := os.Getenv("MODEL_DIR"); modelDir != "" {
-		slog.Info("MODEL_DIR set — plug in hugot ONNX embedder here", "dir", modelDir)
-		// TODO: embedder = embedding.NewONNXEmbedder(modelDir)
+		slog.Info("loading ONNX embedder", "dir", modelDir)
+		onnx, err := embedding.NewONNXEmbedder(modelDir)
+		if err != nil {
+			slog.Error("failed to load ONNX embedder, falling back to ZeroEmbedder", "err", err)
+			embedder = embedding.NewZeroEmbedder(cfg.Dim)
+		} else {
+			slog.Info("ONNX embedder ready", "dim", onnx.Dim())
+			cfg.Dim = onnx.Dim() // use model's actual dimension
+			embedder = onnx
+			defer onnx.Close()
+		}
 	} else {
-		slog.Warn("MODEL_DIR not set — semantic similarity search disabled, exact-match only")
+		slog.Warn("MODEL_DIR not set — semantic similarity disabled, exact-match only")
+		embedder = embedding.NewZeroEmbedder(cfg.Dim)
 	}
 
 	vidx := index.NewFlatIndex(cfg.Dim)

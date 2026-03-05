@@ -10,4 +10,12 @@ services:
       - CACHE_DEFAULT_TTL=3600
       - CACHE_SIMILARITY_THRESHOLD=0.85
       - EMBED_WORKERS=4
+      # Set MODEL_DIR to enable semantic similarity.
+      # The model directory must contain:  model.onnx + tokenizer.json
+      # Download model: hugot downloads it automatically on first run.
+      # Leave empty for exact-match only mode (default, no ONNX required).
+      - MODEL_DIR=
+    # Uncomment to mount a local models directory:
+    # volumes:
+    #   - ./models:/models
     restart: unless-stopped
