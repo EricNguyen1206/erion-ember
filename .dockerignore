@@ -1,61 +1,30 @@
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
 # Git
 .git/
 .gitignore
 
-# IDE
-.vscode/
+# Go build artifacts
+bin/
+*.test
+*.out
+
+# Local dev env
+.goenv/
+node_modules/
+
+# Editor
 .idea/
+.vscode/
 *.swp
-*.swo
+
+# Agent
+.agent/
+.opencode/
 
 # OS
 .DS_Store
-Thumbs.db
 
-# Logs
-logs/
-*.log
+# Docker
+.dockerignore
 
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-.env.production
-
-# Temporary folders
-tmp/
-temp/
+# Models (downloaded at runtime)
+models/
