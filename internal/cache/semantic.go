@@ -10,14 +10,8 @@ import (
 // Config holds SemanticCache configuration.
 type Config struct {
 	MaxElements         int
-	SimilarityThreshold float32 // [0,1] — converted to max Hamming bits internally
+	SimilarityThreshold float32 // [0,1]
 	DefaultTTL          time.Duration
-}
-
-// maxHammingBits converts similarity threshold to max allowed differing bits.
-// threshold=0.85 → 64*(1-0.85) ≈ 9 bits.
-func (c Config) maxHammingBits() int {
-	return int(float32(64) * (1.0 - c.SimilarityThreshold))
 }
 
 func DefaultConfig() Config {
@@ -48,7 +42,7 @@ type Stats struct {
 // SemanticCache orchestrates:
 //
 //	Fast path  → xxhash exact lookup       (~0µs)
-//	Slow path  → SimHash Hamming scan      (~N µs, O(n) over stored entries)
+//	Slow path  → BM25+Jaccard token scan   (~N µs, O(n) over stored entries)
 //
 // Zero dependencies: no model files, no CGO, no external services.
 type SemanticCache struct {
@@ -56,7 +50,7 @@ type SemanticCache struct {
 	normalizer *Normalizer
 	compressor *Compressor
 	store      *MetadataStore
-	simhasher  *SimHasher
+	scorer     *Scorer
 	hits       atomic.Int64
 	misses     atomic.Int64
 	total      atomic.Int64
@@ -70,7 +64,7 @@ func New(cfg Config) *SemanticCache {
 		normalizer: NewNormalizer(),
 		compressor: NewCompressor(),
 		store:      NewMetadataStore(cfg.MaxElements),
-		simhasher:  NewSimHasher(),
+		scorer:     NewScorer(),
 	}
 }
 
@@ -80,7 +74,6 @@ func (c *SemanticCache) Get(_ context.Context, prompt string, threshold float32)
 	if threshold == 0 {
 		threshold = c.cfg.SimilarityThreshold
 	}
-	maxBits := int(float32(64) * (1.0 - threshold))
 
 	normalized := c.normalizer.Normalize(prompt)
 	hash := c.normalizer.Hash(normalized)
@@ -94,28 +87,27 @@ func (c *SemanticCache) Get(_ context.Context, prompt string, threshold float32)
 		}
 	}
 
-	// ── Slow path: SimHash Hamming distance scan ──────────────────────────
-	queryFP := c.simhasher.Hash(normalized)
+	// ── Slow path: BM25 + Jaccard similarity scan ─────────────────────────
+	queryTokens := Tokenize(normalized)
 	entries := c.store.ScanAll()
 
 	var bestEntry *Entry
-	bestBits := maxBits + 1 // "worse than threshold" sentinel
+	var bestScore float32
 
 	for _, e := range entries {
-		d := HammingDistance(queryFP, e.SimHash)
-		if d < bestBits {
-			bestBits = d
+		s := c.scorer.Score(queryTokens, e.Tokens)
+		if s > bestScore {
+			bestScore = s
 			bestEntry = e
 		}
 	}
 
-	if bestEntry != nil && bestBits <= maxBits {
+	if bestEntry != nil && bestScore >= threshold {
 		if e := c.store.FindByHash(bestEntry.PromptHash); e != nil {
 			resp, err := c.compressor.Decompress(e.CompressedResponse, e.OriginalResponseSize)
 			if err == nil {
 				c.hits.Add(1)
-				sim := Similarity(queryFP, e.SimHash)
-				return &GetResult{Response: resp, Similarity: sim, ExactMatch: false, CachedAt: e.CreatedAt}, true
+				return &GetResult{Response: resp, Similarity: bestScore, ExactMatch: false, CachedAt: e.CreatedAt}, true
 			}
 		}
 	}
@@ -131,7 +123,7 @@ func (c *SemanticCache) Set(_ context.Context, prompt, response string, ttl time
 	}
 	normalized := c.normalizer.Normalize(prompt)
 	hash := c.normalizer.Hash(normalized)
-	simhash := c.simhasher.Hash(normalized)
+	tokens := Tokenize(normalized)
 
 	compPrompt := c.compressor.Compress(prompt)
 	compResp := c.compressor.Compress(response)
@@ -141,7 +133,7 @@ func (c *SemanticCache) Set(_ context.Context, prompt, response string, ttl time
 	c.store.Set(hash, &Entry{
 		ID:                   id,
 		PromptHash:           hash,
-		SimHash:              simhash,
+		Tokens:               tokens,
 		NormalizedPrompt:     normalized,
 		CompressedPrompt:     compPrompt,
 		CompressedResponse:   compResp,
@@ -150,12 +142,16 @@ func (c *SemanticCache) Set(_ context.Context, prompt, response string, ttl time
 		CreatedAt:            now,
 		LastAccessed:         now,
 	}, ttl)
+	c.scorer.UpdateIDF(tokens)
 	return id, nil
 }
 
 // Delete removes entry by prompt.
 func (c *SemanticCache) Delete(prompt string) bool {
 	hash := c.normalizer.Hash(c.normalizer.Normalize(prompt))
+	if e := c.store.FindByHash(hash); e != nil {
+		c.scorer.RemoveDoc(e.Tokens)
+	}
 	return c.store.Delete(hash)
 }
 

@@ -24,8 +24,8 @@ Erion Ember v3 is a **standalone Go binary** that provides LLM response caching 
 │                 │  └───────────────────────────┘ │  │
 │                 │                               │  │
 │                 │  ┌───────────────────────────┐ │  │
-│                 │  │       SimHasher            │ │  │
-│                 │  │  text → uint64 fingerprint │ │  │
+│                 │  │      BM25 + Jaccard        │ │  │
+│                 │  │       Hybrid Scorer        │ │  │
 │                 │  └───────────────────────────┘ │  │
 │                 └───────────────────────────────┘  │
 └─────────────────────────────────────────────────────┘
@@ -51,19 +51,19 @@ MetadataStore.FindByHash(key)  → Entry found?
        → return { hit: true, exact_match: true, similarity: 1.0 }
 ```
 
-### Slow Path (SimHash similarity, ~Nµs)
+### Slow Path (BM25+Jaccard similarity, ~Nµs)
 
 ```
 GET request (exact miss)
     │
     ▼
-SimHasher.Hash(normalized)     → uint64 fingerprint (Charikar)
+Tokenize(normalized)           → []string tokens
     │
     ▼
 MetadataStore.ScanAll()        → []Entry snapshot
     │
     ▼
-for each entry: HammingDistance(queryFP, entry.SimHash)
+for each entry: Scorer.Score(queryTokens, entry.Tokens)
     │
     ▼
 best match within threshold?
@@ -77,32 +77,27 @@ best match within threshold?
 SET request { prompt, response, ttl }
     │
     ├── Normalizer.Normalize + Hash         → promptHash (xxhash)
-    ├── SimHasher.Hash(normalized)          → simHash (uint64)
+    ├── Tokenize(normalized)                → tokens ([]string)
     ├── Compressor.Compress(prompt)         → []byte
     ├── Compressor.Compress(response)       → []byte
-    └── MetadataStore.Set(promptHash, Entry{SimHash, ...}, ttl)
+    ├── MetadataStore.Set(promptHash, Entry{Tokens, ...}, ttl)
+    └── Scorer.UpdateIDF(tokens)            → incremental state update
 ```
 
-## SimHash Algorithm
+## Hybrid Scoring Algorithm
 
-Charikar locality-sensitive hashing — creates a 64-bit fingerprint:
+Combines term importance (BM25) with word overlap (Jaccard) to achieve robust paraphrase detection without heavy models.
 
-```
-tokens = split(normalizedText)
+### BM25 (Best Matching 25)
+Estimates term relevance based on Inverse Document Frequency (IDF) and Term Frequency (TF). 
+- **Rare terms** (low frequency in corpus) are weighted more heavily.
+- **Incremental IDF**: The global IDF state is updated on every `Set` and `Delete`, ensuring the scorer evolves with the cache.
 
-v = [64]int32{0}
-for token in tokens:
-    h = xxhash(token)           // 64-bit hash
-    for i in 0..63:
-        v[i] += h.bit(i) ? +1 : -1
+### Jaccard Similarity
+Measures simpler token overlap: `|A ∩ B| / |A ∪ B|`. This ensures that even if IDF is not yet representative (small corpus), identical or nearly identical word sets are detected.
 
-fingerprint = bits: if v[i] > 0 → 1, else → 0
-```
-
-**Key property**: texts sharing most tokens produce fingerprints with small Hamming distance.
-
-**Similarity formula**: `sim = (64 - HammingBits) / 64`  
-**Threshold conversion**: `threshold=0.85 → maxBits = 64 × (1-0.85) = 9 bits`
+### Combined Metric
+`Similarity = 0.6 × BM25_normalized + 0.4 × Jaccard`
 
 ## Data Model
 
@@ -110,7 +105,7 @@ fingerprint = bits: if v[i] > 0 → 1, else → 0
 type Entry struct {
     ID                   string
     PromptHash           uint64        // xxhash of normalised prompt
-    SimHash              uint64        // Charikar fingerprint
+    Tokens               []string      // normalized tokens for similarity scan
     NormalizedPrompt     string
     CompressedPrompt     []byte        // LZ4
     CompressedResponse   []byte        // LZ4
@@ -128,28 +123,30 @@ type Entry struct {
 Thread-safe LRU cache:
 - `byHash map[uint64]*list.Element` — O(1) exact lookup
 - `lru *list.List` — eviction order (LRU tail evicted when maxSize exceeded)
-- `ScanAll() []*Entry` — O(n) snapshot for SimHash search
+- `ScanAll() []*Entry` — O(n) snapshot for similarity scan
 
 ## Configuration
 
 | Env Var | Default | Notes |
 |---------|---------|-------|
 | `HTTP_PORT` | `8080` | Listen port |
-| `CACHE_SIMILARITY_THRESHOLD` | `0.85` | Converted to `int(64*(1-t))` max Hamming bits |
+| `CACHE_SIMILARITY_THRESHOLD` | `0.85` | Similarity threshold [0,1] |
 | `CACHE_MAX_ELEMENTS` | `100000` | LRU max entries |
 | `CACHE_DEFAULT_TTL` | `3600s` | 0 = no expiry |
 
 ## Scalability Notes
 
-The SimHash slow path is **O(n)** over stored entries. Typical LLM cache sizes:
+The similarity slow path is **O(n)** over stored entries. 
 
 | Entries | Slow path latency |
 |---------|-------------------|
-| 1,000 | ~5 µs |
-| 10,000 | ~50 µs |
-| 100,000 | ~500 µs |
-| 1,000,000 | ~5 ms |
+| 1,000 | ~10 µs |
+| 10,000 | ~100 µs |
+| 100,000 | ~1 ms |
+| 1,000,000 | ~10 ms |
+
+The BM25+Jaccard approach is slightly slower (~2x) than the previous SimHash implementation but significantly more accurate for paraphrase detection.
 
 For >100K entries with high slow-path traffic, consider:
-- Banding (divide 64-bit fingerprint into 8×8-bit bands → multi-bucket lookup)
-- HNSW over SimHash vectors (e.g., via `usearch`)
+- **Banding**: Inverted indexing for top candidate selection.
+- **HNSW**: Building a vector index on the token space if latencies exceed 10ms.

@@ -10,7 +10,7 @@ import (
 type Entry struct {
 	ID                   string
 	PromptHash           uint64
-	SimHash              uint64 // locality-sensitive fingerprint for similarity search
+	Tokens               []string // normalized tokens for BM25+Jaccard similarity scoring
 	NormalizedPrompt     string
 	CompressedPrompt     []byte
 	CompressedResponse   []byte
@@ -84,7 +84,7 @@ func (s *MetadataStore) FindByHash(hash uint64) *Entry {
 	return item.entry
 }
 
-// ScanAll returns a snapshot of all live (non-expired) entries for SimHash search.
+// ScanAll returns a snapshot of all live (non-expired) entries for BM25+Jaccard search.
 // Callers must not modify the returned entries.
 func (s *MetadataStore) ScanAll() []*Entry {
 	s.mu.Lock()

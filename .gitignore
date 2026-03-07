@@ -6,9 +6,6 @@ dist/
 *.out
 coverage.out
 
-# ONNX model cache (downloaded at runtime)
-models/
-
 # Environment
 .env
 .env.local
@@ -26,6 +23,4 @@ Thumbs.db
 *.swp
 *.swo
 
-# Node.js remnants (ignore if exists)
-node_modules/
 .goenv/

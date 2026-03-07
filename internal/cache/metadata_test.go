@@ -52,8 +52,8 @@ func TestMetadataDelete(t *testing.T) {
 
 func TestMetadataScanAll(t *testing.T) {
 	s := cache.NewMetadataStore(100)
-	s.Set(1, &cache.Entry{PromptHash: 1, SimHash: 0xABC}, 0)
-	s.Set(2, &cache.Entry{PromptHash: 2, SimHash: 0xDEF}, 0)
+	s.Set(1, &cache.Entry{PromptHash: 1, Tokens: []string{"hello"}}, 0)
+	s.Set(2, &cache.Entry{PromptHash: 2, Tokens: []string{"world"}}, 0)
 	all := s.ScanAll()
 	if len(all) != 2 {
 		t.Errorf("ScanAll: got %d entries, want 2", len(all))
