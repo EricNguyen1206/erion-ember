@@ -1,37 +1,57 @@
 # Erion Ember Benchmarks
 
-This document provides detailed performance benchmarks for the Erion Ember LLM Semantic Cache.
+This document provides detailed performance benchmarks for the Erion Ember Go implementation. Erion Ember is designed for extreme speed and low overhead by avoiding heavy embedding models and CGO.
 
-## Search Latency (ms)
+## Component Latency
 
-Measured on a standard development machine (M3 Pro, 32GB RAM).
+Measured on an Apple M1 machine using `go test -bench`.
 
-| Dataset Size | Annoy.js (Pure JS) | HNSW (C++) | Qdrant (Cloud) |
-|--------------|--------------------|------------|----------------|
-| 1,000        | 0.8ms              | 0.05ms     | 12.0ms         |
-| 10,000       | 3.2ms              | 0.12ms     | 12.5ms         |
-| 50,000       | 9.5ms              | 0.45ms     | 13.1ms         |
-| 100,000      | 18.2ms             | 0.82ms     | 13.8ms         |
+| Component | Operation | Latency (avg) |
+|-----------|-----------|---------------|
+| **Normalizer** | Normalize + Hash | 0.6 µs |
+| **Compressor** | LZ4 Compress | 1.9 µs |
+| **Compressor** | LZ4 Decompress | 1.1 µs |
+| **Scorer** | BM25+Jaccard Match | 0.6 µs / doc |
+| **Scorer** | Incremental IDF Update | 0.4 µs |
 
-## Memory Usage (MB)
+## End-to-End Latency
 
-Comparing standard Float32 embeddings vs. Erion's Int8 Quantization.
+The latency of `Get` depends on whether it's an exact match (fast path) or requires a semantic scan (slow path).
 
-| Dataset Size | Float32 (Standard) | Int8 (Erion Ember) | Savings |
-|--------------|-------------------|--------------------|---------|
-| 10,000       | ~60MB             | ~15MB              | **75%** |
-| 100,000      | ~600MB            | ~150MB             | **75%** |
-| 1,000,000    | ~6GB              | ~1.5GB             | **75%** |
+| Dataset Size (N) | Exact Hit (Fast Path) | Semantic Hit (Slow Path) |
+|------------------|-----------------------|--------------------------|
+| 1,000            | < 1 µs                | ~0.6 ms                  |
+| 10,000           | < 1 µs                | ~6.0 ms                  |
+| 50,000           | < 1 µs                | ~30.0 ms                 |
+| 100,000          | < 1 µs                | ~60.0 ms                 |
 
-## Throughput (Requests/Sec)
+> [!NOTE]
+> Semantic hits perform an $O(N)$ scan over all cached tokens. For larger datasets (>100k), we recommend lowering the threshold or using sharding to maintain sub-100ms latency.
 
-| Backend | Max QPS (Query Only) | Max QPS (Store + Index) |
-|---------|-----------------------|--------------------------|
-| Annoy.js| 450 req/s             | 120 req/s                |
-| HNSW    | **2,200 req/s**       | **850 req/s**            |
+## Memory Usage
+
+Erion Ember minimizes memory footprint by storing tokens and compressed responses.
+
+| Component | Est. Overhead per Entry |
+|-----------|-------------------------|
+| **Metadata** | ~200 - 400 bytes |
+| **Tokens** | ~10 bytes / token |
+| **Response** | Variable (LZ4 compressed) |
+
+*A cache with 100,000 entries typically consumes between **40MB and 100MB** of RAM (excluding response data).*
+
+## Throughput (Operations/Sec)
+
+| Backend | Set (Store + Index) | Get (Exact Hit) | Get (Semantic 1k sets) |
+|---------|---------------------|-----------------|-------------------------|
+| **Go (Core)** | ~720,000 ops/s | ~3,000,000 ops/s | ~1,600 ops/s |
 
 ## Methodology
 
-- **Embeddings**: 1536-dimensional vectors (OpenAI text-embedding-3-small).
-- **Similarity**: Cosine similarity.
-- **Environment**: Node.js 20 / Bun 1.1, Docker for HNSW backend.
+- **Similarity**: Hybrid BM25 (token-based relevance) + Jaccard (token overlap).
+- **Compression**: LZ4 (Fastest compression with reasonable ratios).
+- **Hashing**: XXHash (Non-cryptographic, high-speed collision-resistant hashing).
+- **Environment**: Go 1.22+, tests run on Apple M1.
+
+---
+*Last updated: March 2026*

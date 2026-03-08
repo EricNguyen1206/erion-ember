@@ -36,3 +36,13 @@ func TestHashDifferent(t *testing.T) {
 		t.Error("different inputs should differ")
 	}
 }
+
+func BenchmarkNormalizer(b *testing.B) {
+	n := cache.NewNormalizer()
+	input := "  This IS a Test PROMPT for Erion Ember Semantic Cache NORMALIZATION performance measurement!  "
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		normalized := n.Normalize(input)
+		_ = n.Hash(normalized)
+	}
+}

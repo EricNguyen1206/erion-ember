@@ -41,3 +41,23 @@ func TestCompressRepeated(t *testing.T) {
 		t.Error("roundtrip failed for repeated text")
 	}
 }
+
+func BenchmarkCompressor_Compress(b *testing.B) {
+	c := cache.NewCompressor()
+	text := strings.Repeat("This is a moderately long string that will be compressed using LZ4. It contains some repetitive patterns to see how well it scales. ", 50)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = c.Compress(text)
+	}
+}
+
+func BenchmarkCompressor_Decompress(b *testing.B) {
+	c := cache.NewCompressor()
+	text := strings.Repeat("This is a moderately long string that will be compressed using LZ4. It contains some repetitive patterns to see how well it scales. ", 50)
+	compressed := c.Compress(text)
+	originalLen := len(text)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = c.Decompress(compressed, originalLen)
+	}
+}

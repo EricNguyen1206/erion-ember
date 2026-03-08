@@ -179,3 +179,33 @@ func TestSemanticCache_TTLExpiry(t *testing.T) {
 		t.Fatal("expected miss after TTL expiry")
 	}
 }
+
+func BenchmarkSemanticCache_Set(b *testing.B) {
+	sc := cache.New(cache.Config{MaxElements: 1000})
+	ctx := context.Background()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sc.Set(ctx, "how to use semantic cache in go", "You can use erion-ember.", 0)
+	}
+}
+
+func BenchmarkSemanticCache_GetHit(b *testing.B) {
+	sc := cache.New(cache.Config{MaxElements: 1000})
+	ctx := context.Background()
+	prompt := "how to use semantic cache in go"
+	sc.Set(ctx, prompt, "You can use erion-ember.", 0)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = sc.Get(ctx, prompt, 0.85)
+	}
+}
+
+func BenchmarkSemanticCache_GetMiss(b *testing.B) {
+	sc := cache.New(cache.Config{MaxElements: 1000})
+	ctx := context.Background()
+	sc.Set(ctx, "something else", "response", 0)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = sc.Get(ctx, "how to use semantic cache in go", 0.85)
+	}
+}

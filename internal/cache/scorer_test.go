@@ -106,3 +106,23 @@ func TestScoreUnrelatedLow(t *testing.T) {
 		t.Errorf("unrelated tokens: want <0.15 score, got %f", got)
 	}
 }
+
+func BenchmarkScorer_Score(b *testing.B) {
+	s := cache.NewScorer()
+	query := []string{"explain", "goroutines", "go", "concurrency", "performance"}
+	doc := []string{"goroutines", "go", "lightweight", "threads", "managed", "by", "runtime"}
+	s.UpdateIDF(doc)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = s.Score(query, doc)
+	}
+}
+
+func BenchmarkScorer_UpdateIDF(b *testing.B) {
+	s := cache.NewScorer()
+	tokens := []string{"this", "is", "a", "list", "of", "tokens", "to", "update", "idf"}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		s.UpdateIDF(tokens)
+	}
+}
