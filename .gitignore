@@ -6,6 +6,10 @@ dist/
 *.out
 coverage.out
 
+# Client build artifacts
+clients/*/dist/
+clients/*/node_modules/
+
 # Environment
 .env
 .env.local
